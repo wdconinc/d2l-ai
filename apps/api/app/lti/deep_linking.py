@@ -30,7 +30,7 @@ class Provenance(BaseModel):
     model: str = "pending"
     prompt_hash: str = "pending"
     version: str = "v0"
-    generated_at: str = Field(default_factory=lambda: datetime.now(tz=UTC).isoformat())
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 class ContentSelection(BaseModel):
@@ -94,7 +94,7 @@ class DeepLinkingResponseBuilder:
         item: dict[str, Any] = {
             "type": selection.item_type.value,
             "title": selection.title,
-            "custom": {"provenance": selection.provenance.model_dump()},
+            "custom": {"provenance": selection.provenance.model_dump(mode="json")},
         }
         if selection.text:
             item["text"] = selection.text
