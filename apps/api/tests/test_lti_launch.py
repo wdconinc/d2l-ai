@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 import re
 
 import jwt
@@ -10,7 +11,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 
 from app.lti.config import get_lti_settings, get_tool_conf
-from app.lti.routes import configure_oidc_store
+from app.lti.routes import reset_oidc_store_cache
 from app.main import app
 
 
@@ -20,7 +21,9 @@ def keypair() -> tuple[str, str]:
 
 
 @pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str]) -> TestClient:
+def client(
+    monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str], tmp_path: Path
+) -> TestClient:
     _, platform_public_key = keypair
     tool_private_key, tool_public_key = _generate_rsa_keypair()
     monkeypatch.setenv("LTI_ISSUER", "https://sandbox.brightspace.com")
@@ -31,9 +34,11 @@ def client(monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str]) -> TestCli
     monkeypatch.setenv("LTI_PLATFORM_PUBLIC_KEY_PEM", platform_public_key)
     monkeypatch.setenv("LTI_TOOL_PRIVATE_KEY_PEM", tool_private_key)
     monkeypatch.setenv("LTI_TOOL_PUBLIC_KEY_PEM", tool_public_key)
+    monkeypatch.setenv("LTI_AUTH_TOKEN_URL", "https://sandbox.brightspace.com/d2l/lti/token")
+    monkeypatch.setenv("LTI_STATE_DB_PATH", str(tmp_path / "lti-state.db"))
     get_lti_settings.cache_clear()
     get_tool_conf.cache_clear()
-    configure_oidc_store(get_lti_settings())
+    reset_oidc_store_cache()
     return TestClient(app)
 
 

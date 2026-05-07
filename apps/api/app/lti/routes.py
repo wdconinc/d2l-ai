@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from html import escape
 import logging
 import re
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
-from html import escape
 
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, status
@@ -18,7 +19,6 @@ from app.lti.state import LTIStateNonceStore
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/lti", tags=["lti"])
-_oidc_store = LTIStateNonceStore(ttl_seconds=300)
 
 
 def _is_instructor(roles: list[str]) -> bool:
@@ -41,8 +41,13 @@ def _extract_org_unit_id(claims: dict[str, Any]) -> str | None:
     return custom.get("org_unit_id") or context.get("id")
 
 
-def get_oidc_store() -> LTIStateNonceStore:
-    return _oidc_store
+@lru_cache(maxsize=1)
+def _build_oidc_store(ttl_seconds: int, state_db_path: str) -> LTIStateNonceStore:
+    return LTIStateNonceStore(ttl_seconds=ttl_seconds, database_path=state_db_path)
+
+
+def get_oidc_store(settings: LTISettings = Depends(get_lti_settings)) -> LTIStateNonceStore:
+    return _build_oidc_store(settings.state_ttl_seconds, settings.state_db_path)
 
 
 def _validate_hint_parameter(value: str, field_name: str) -> str:
@@ -175,8 +180,5 @@ def launch(
         "correlation_id": correlation_id,
         "launch_context": launch_context,
     }
-
-
-def configure_oidc_store(settings: LTISettings) -> None:
-    global _oidc_store
-    _oidc_store = LTIStateNonceStore(ttl_seconds=settings.state_ttl_seconds)
+def reset_oidc_store_cache() -> None:
+    _build_oidc_store.cache_clear()

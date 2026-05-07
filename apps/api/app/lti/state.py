@@ -1,50 +1,87 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import sqlite3
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from secrets import token_urlsafe
 
 
-@dataclass
-class StateNonceRecord:
-    nonce: str
-    expires_at: datetime
-
-
 class LTIStateNonceStore:
-    def __init__(self, ttl_seconds: int = 300) -> None:
+    def __init__(self, ttl_seconds: int = 300, database_path: str = "/tmp/d2l-ai-lti-state.db") -> None:
         self.ttl_seconds = ttl_seconds
-        self._states: dict[str, StateNonceRecord] = {}
-        self._used_nonces: set[str] = set()
+        self.database_path = database_path
+        Path(database_path).parent.mkdir(parents=True, exist_ok=True)
+        self._conn = sqlite3.connect(database_path, check_same_thread=False)
+        self._initialize()
 
     def issue(self) -> tuple[str, str]:
         self._cleanup_expired()
         state = token_urlsafe(32)
         nonce = token_urlsafe(32)
-        self._states[state] = StateNonceRecord(
-            nonce=nonce,
-            expires_at=datetime.now(UTC) + timedelta(seconds=self.ttl_seconds),
-        )
+        expires_at = self._expiry_timestamp()
+        with self._conn:
+            self._conn.execute(
+                "INSERT INTO lti_states(state, nonce, expires_at) VALUES (?, ?, ?)",
+                (state, nonce, expires_at),
+            )
         return state, nonce
 
     def consume(self, state: str, nonce: str) -> bool:
         self._cleanup_expired()
-        record = self._states.pop(state, None)
-        if record is None:
-            return False
-        if record.nonce != nonce:
-            return False
-        if nonce in self._used_nonces:
-            return False
-        self._used_nonces.add(nonce)
-        return True
+        with self._conn:
+            row = self._conn.execute(
+                "SELECT nonce FROM lti_states WHERE state = ?",
+                (state,),
+            ).fetchone()
+            if row is None:
+                return False
 
-    def has_state(self, state: str) -> bool:
-        self._cleanup_expired()
-        return state in self._states
+            self._conn.execute("DELETE FROM lti_states WHERE state = ?", (state,))
+            if row[0] != nonce:
+                return False
+
+            nonce_exists = self._conn.execute(
+                "SELECT nonce FROM lti_used_nonces WHERE nonce = ?",
+                (nonce,),
+            ).fetchone()
+            if nonce_exists is not None:
+                return False
+
+            self._conn.execute(
+                "INSERT INTO lti_used_nonces(nonce, expires_at) VALUES (?, ?)",
+                (nonce, self._expiry_timestamp()),
+            )
+            return True
+
+    def _initialize(self) -> None:
+        with self._conn:
+            self._conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS lti_states (
+                    state TEXT PRIMARY KEY,
+                    nonce TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL
+                )
+                """
+            )
+            self._conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS lti_used_nonces (
+                    nonce TEXT PRIMARY KEY,
+                    expires_at INTEGER NOT NULL
+                )
+                """
+            )
 
     def _cleanup_expired(self) -> None:
-        now = datetime.now(UTC)
-        expired_states = [state for state, record in self._states.items() if record.expires_at < now]
-        for state in expired_states:
-            self._states.pop(state, None)
+        now = self._now_timestamp()
+        with self._conn:
+            self._conn.execute("DELETE FROM lti_states WHERE expires_at < ?", (now,))
+            self._conn.execute("DELETE FROM lti_used_nonces WHERE expires_at < ?", (now,))
+
+    def _expiry_timestamp(self) -> int:
+        return int((datetime.now(UTC) + timedelta(seconds=self.ttl_seconds)).timestamp())
+
+    @staticmethod
+    def _now_timestamp() -> int:
+        return int(datetime.now(UTC).timestamp())
