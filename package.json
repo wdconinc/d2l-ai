@@ -1,0 +1,14 @@
+{
+  "name": "d2l-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Accessibility test tooling for d2l-ai web/admin scaffolds",
+  "scripts": {
+    "test:a11y": "playwright test apps/web/tests/a11y.spec.js apps/admin/tests/a11y.spec.js --project=chromium"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.54.1",
+    "axe-core": "^4.10.3"
+  }
+}
