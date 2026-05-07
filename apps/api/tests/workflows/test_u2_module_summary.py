@@ -48,6 +48,7 @@ def test_generate_u2_module_summary_empty_module() -> None:
 
     assert "No supported topic content was found." in llm_gateway.last_prompt
     assert result.summary == "This module introduces key concepts."
+    assert result.summary
     assert result.suggested_outcomes == ["Explain concept A", "Apply concept B"]
     assert result.time_on_task_minutes == 45
     assert result.deep_linking_payload is None

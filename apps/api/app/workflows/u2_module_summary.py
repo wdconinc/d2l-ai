@@ -115,7 +115,7 @@ def _extract_supported_topic_text(topics: Sequence[ModuleTopic]) -> list[str]:
         if not cleaned:
             continue
 
-        excerpt = cleaned[:_MAX_TOPIC_CHARS]
+        excerpt = _truncate_preserving_words(cleaned, _MAX_TOPIC_CHARS)
         extracted.append(f"{topic.title}: {excerpt}")
     return extracted
 
@@ -155,8 +155,18 @@ def _normalize_text(text: str) -> str:
     return "\n".join(kept_lines).strip()
 
 
+def _truncate_preserving_words(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    truncated = text[:max_chars]
+    if " " not in truncated:
+        return truncated
+    return truncated.rsplit(" ", 1)[0]
+
+
 def _build_preview_markdown(draft: ModuleSummaryDraft) -> str:
-    outcomes = "\n".join(f"- {item}" for item in draft.suggested_outcomes) or "- (none)"
+    cleaned_outcomes = [item.strip() for item in draft.suggested_outcomes if item.strip()]
+    outcomes = "\n".join(f"- {item}" for item in cleaned_outcomes) or "- (none)"
     return (
         "## Module Summary\n"
         f"{draft.summary}\n\n"
@@ -176,12 +186,15 @@ def _build_deep_linking_payload(
         "version": provenance.version,
         "generated_at": provenance.generated_at,
     }
+    safe_version = _sanitize_for_html_comment(provenance.version)
+    safe_model = _sanitize_for_html_comment(provenance.model)
+    safe_prompt_hash = _sanitize_for_html_comment(provenance.prompt_hash)
     provenance_comment = (
-        f"<!-- generated-by: UM-AI-Tool {provenance.version}, model={provenance.model}, "
-        f"prompt-hash={provenance.prompt_hash} -->"
+        f"<!-- generated-by: UM-AI-Tool {safe_version}, model={safe_model}, "
+        f"prompt-hash={safe_prompt_hash} -->"
     )
     # Prevent accidental script-tag termination if metadata ever contains '</script>'.
-    metadata_json = json.dumps(metadata).replace("</", "<\\/")
+    metadata_json = json.dumps(metadata, ensure_ascii=True).replace("</", "<\\/")
     html = (
         f"{provenance_comment}\n"
         "<article>\n"
@@ -191,3 +204,7 @@ def _build_deep_linking_payload(
         "</article>"
     )
     return DeepLinkingPayload(title=title, html=html, metadata=metadata)
+
+
+def _sanitize_for_html_comment(value: str) -> str:
+    return value.replace("--", "- -").replace(">", "&gt;")
