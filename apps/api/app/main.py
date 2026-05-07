@@ -61,5 +61,9 @@ if _required_env.issubset(os.environ):
     app = create_app()
 else:
     missing = ", ".join(sorted(_required_env.difference(os.environ)))
-    warn(f"Brightspace OAuth2 app not fully configured; missing env vars: {missing}", RuntimeWarning)
+    warn(
+        "Brightspace OAuth2 app not fully configured; "
+        f"set BRIGHTSPACE_* environment variables (missing: {missing})",
+        RuntimeWarning,
+    )
     app = FastAPI()

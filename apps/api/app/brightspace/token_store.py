@@ -5,7 +5,6 @@ from __future__ import annotations
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
-from threading import Lock
 
 from cryptography.fernet import Fernet
 
@@ -16,14 +15,15 @@ class EncryptedRefreshTokenStore:
     def __init__(self, db_path: str | Path, encryption_key: str) -> None:
         self._db_path = Path(db_path)
         self._cipher = Fernet(encryption_key.encode("utf-8"))
-        self._lock = Lock()
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
         self._init_db()
 
+    def _connection(self) -> sqlite3.Connection:
+        return sqlite3.connect(self._db_path)
+
     def _init_db(self) -> None:
-        with self._lock:
-            self._conn.execute(
+        with self._connection() as conn:
+            conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS app_brightspace_tokens (
                     tenant TEXT NOT NULL,
@@ -34,12 +34,12 @@ class EncryptedRefreshTokenStore:
                 )
                 """
             )
-            self._conn.commit()
+            conn.commit()
 
     def save_refresh_token(self, tenant: str, token_owner: str, refresh_token: str) -> None:
         encrypted = self._cipher.encrypt(refresh_token.encode("utf-8")).decode("utf-8")
-        with self._lock:
-            self._conn.execute(
+        with self._connection() as conn:
+            conn.execute(
                 """
                 INSERT INTO app_brightspace_tokens (
                     tenant,
@@ -54,11 +54,11 @@ class EncryptedRefreshTokenStore:
                 """,
                 (tenant, token_owner, encrypted, datetime.now(UTC).isoformat()),
             )
-            self._conn.commit()
+            conn.commit()
 
     def get_refresh_token(self, tenant: str, token_owner: str) -> str | None:
-        with self._lock:
-            row = self._conn.execute(
+        with self._connection() as conn:
+            row = conn.execute(
                 """
                 SELECT refresh_token_encrypted
                 FROM app_brightspace_tokens
@@ -69,9 +69,3 @@ class EncryptedRefreshTokenStore:
         if row is None:
             return None
         return self._cipher.decrypt(row[0].encode("utf-8")).decode("utf-8")
-
-    def __del__(self) -> None:
-        try:
-            self._conn.close()
-        except Exception:
-            pass
