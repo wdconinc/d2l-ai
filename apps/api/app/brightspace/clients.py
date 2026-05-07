@@ -66,7 +66,7 @@ class BrightspaceApiClient:
     def _get_paginated(self, path: str, model_type: type[T]) -> list[T]:
         results: list[T] = []
         bookmark: str | None = None
-        item_adapter = TypeAdapter(model_type)
+        item_adapter: TypeAdapter[T] = TypeAdapter(model_type)
         paging_info_adapter: TypeAdapter[PagingInfo | None] = TypeAdapter(PagingInfo | None)
 
         while True:
