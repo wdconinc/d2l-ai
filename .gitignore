@@ -1,7 +1,7 @@
 __pycache__/
-.pytest_cache/
 *.py[cod]
 *.egg-info/
+.pytest_cache/
 node_modules/
 playwright-report/
 test-results/
