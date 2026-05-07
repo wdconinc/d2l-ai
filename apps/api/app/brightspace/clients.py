@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from time import sleep as default_sleep
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import httpx
 from pydantic import TypeAdapter
@@ -66,7 +66,7 @@ class BrightspaceApiClient:
     def _get_paginated(self, path: str, model_type: type[T]) -> list[T]:
         results: list[T] = []
         bookmark: str | None = None
-        item_adapter: TypeAdapter[T] = TypeAdapter(model_type)
+        item_adapter: TypeAdapter[Any] = TypeAdapter(model_type)
         paging_info_adapter: TypeAdapter[PagingInfo | None] = TypeAdapter(PagingInfo | None)
 
         while True:
@@ -74,7 +74,7 @@ class BrightspaceApiClient:
             response = self._request("GET", path, params=params)
             payload = response.json()
             for item in payload.get("Objects", []):
-                results.append(item_adapter.validate_python(item))
+                results.append(cast(T, item_adapter.validate_python(item)))
             paging_info = paging_info_adapter.validate_python(payload.get("PagingInfo"))
 
             if not paging_info or not paging_info.has_more_items:
