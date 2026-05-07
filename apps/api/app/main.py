@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from warnings import warn
 
 from fastapi import FastAPI, Query
 
@@ -56,4 +57,9 @@ _required_env = {
     "BRIGHTSPACE_TOKEN_DB_PATH",
     "BRIGHTSPACE_TOKEN_ENCRYPTION_KEY",
 }
-app = create_app() if _required_env.issubset(os.environ) else FastAPI()
+if _required_env.issubset(os.environ):
+    app = create_app()
+else:
+    missing = ", ".join(sorted(_required_env.difference(os.environ)))
+    warn(f"Brightspace OAuth2 app not fully configured; missing env vars: {missing}", RuntimeWarning)
+    app = FastAPI()

@@ -48,6 +48,7 @@ class _TokenBundle:
 
 
 TOKEN_EXPIRY_BUFFER_SECONDS = 30
+DEFAULT_HTTP_TIMEOUT_SECONDS = 15.0
 
 
 class BrightspaceOAuthClient:
@@ -63,7 +64,7 @@ class BrightspaceOAuthClient:
     ) -> None:
         self._config = config
         self._store = token_store
-        self._http = http_client or httpx.Client(timeout=15.0)
+        self._http = http_client or httpx.Client(timeout=DEFAULT_HTTP_TIMEOUT_SECONDS)
         self._sleep = sleep
         self._token_cache: dict[str, _TokenBundle] = {}
 
