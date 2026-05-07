@@ -46,7 +46,12 @@ class PromptInjectionSecurityTests(unittest.TestCase):
 
     def test_malicious_html_fixture_is_neutralized(self) -> None:
         fixtures = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-        html_case = next(case for case in fixtures if case["kind"] == "html_rewrite_injection")
+        html_case = next(
+            (case for case in fixtures if case["kind"] == "html_rewrite_injection"),
+            None,
+        )
+        self.assertIsNotNone(html_case, "Missing html_rewrite_injection fixture")
+        assert html_case is not None
 
         sanitized = sanitize_html_topic(html_case["html_content"])
         self.assertNotIn("<script", sanitized.lower())
@@ -60,7 +65,7 @@ class PromptInjectionSecurityTests(unittest.TestCase):
             user_request="Create an instructor-facing module overview draft.",
             rag_context=(
                 "Roster:\nAlice Wong, Student ID 7900123\n"
-                "oauth refresh_token=abc123SECRET987654321"
+                "oauth refresh_token=TEST_TOKEN_NOT_REAL_ABC123"
             ),
         )
 
@@ -69,8 +74,9 @@ class PromptInjectionSecurityTests(unittest.TestCase):
         prompt = provider.last_prompt or ""
         self.assertNotIn("7900123", prompt)
         self.assertNotIn("Alice Wong", prompt)
-        self.assertNotIn("abc123SECRET987654321", prompt)
+        self.assertNotIn("TEST_TOKEN_NOT_REAL_ABC123", prompt)
         self.assertNotIn("refresh_token", prompt.lower())
+        self.assertIn("[REDACTED_TOKEN]", prompt)
 
 
 if __name__ == "__main__":
