@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 @dataclass(slots=True)
@@ -26,5 +26,6 @@ class AuditLogWriter:
 
     def write(self, entry: AuditLogEntry) -> None:
         if entry.created_at.tzinfo is None:
-            entry.created_at = entry.created_at.replace(tzinfo=timezone.utc)
+            msg = "AuditLogEntry.created_at must be timezone-aware."
+            raise ValueError(msg)
         self.entries.append(entry)

@@ -84,6 +84,31 @@ def test_gateway_scrubs_pii_before_provider_call() -> None:
     assert "[REDACTED_ID]" in provider.last_prompt
 
 
+def test_gateway_does_not_scrub_unlabeled_long_numbers() -> None:
+    provider = SpyProvider()
+    router = ProviderRouter(
+        rules=[RoutingRule(tenant_id="tenant-a", model="summary", provider_key="spy", provider_model="model-x")]
+    )
+    gateway = LLMGateway(
+        providers={"spy": provider},
+        router=router,
+        scrubber=PIIScrubber(),
+        audit_log=AuditLogWriter(),
+    )
+
+    gateway.generate(
+        LLMRequest(
+            tenant_id="tenant-a",
+            model="summary",
+            prompt="Reference number 20250507 should remain.",
+            correlation_id="corr-2b",
+        )
+    )
+
+    assert provider.last_prompt is not None
+    assert "20250507" in provider.last_prompt
+
+
 def test_gateway_writes_audit_log_with_required_fields() -> None:
     provider = SpyProvider()
     audit_log = AuditLogWriter()
@@ -129,3 +154,13 @@ def test_vllm_adapter_generates_response() -> None:
     adapter = VLLMAdapter()
     response = adapter.generate(model="llama-3.1-70b", prompt="hi", correlation_id="corr-9")
     assert "[vllm:llama-3.1-70b]" in response.text
+
+
+def test_vllm_adapter_rejects_non_canadian_remote_endpoint() -> None:
+    with pytest.raises(ValueError):
+        VLLMAdapter(endpoint="https://api.example.com")
+
+
+def test_vllm_adapter_rejects_insecure_remote_endpoint() -> None:
+    with pytest.raises(ValueError):
+        VLLMAdapter(endpoint="http://vllm.canada.example.ca")
