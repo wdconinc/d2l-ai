@@ -19,6 +19,11 @@ class FakeQuestionLibraryClient:
         return f"written-{len(self.requests)}"
 
 
+class FailingQuestionLibraryClient(FakeQuestionLibraryClient):
+    def create_question(self, request: QuestionLibraryWriteRequest) -> str:
+        raise RuntimeError("write failed")
+
+
 def _build_workflow(llm_payload: str, client: FakeQuestionLibraryClient | None = None) -> U3QuizGenerationWorkflow:
     fake_client = client or FakeQuestionLibraryClient()
     return U3QuizGenerationWorkflow(
@@ -132,3 +137,16 @@ def test_write_to_question_library_uses_typed_client_after_confirmation() -> Non
 
     assert write_ids == ["written-1"]
     assert client.requests[0].question_text == "Edited text"
+
+
+def test_write_to_question_library_surfaces_client_failures() -> None:
+    workflow = _build_workflow(
+        '{"questions":[{"question_type":"short_answer","question_text":"Q","answer_text":"A"}]}',
+        FailingQuestionLibraryClient(),
+    )
+    preview = workflow.generate_preview(
+        QuizGenerationRequest(org_unit_id=10, module_id=2, topic_ids=[1], readings=["Topic"])
+    )
+
+    with pytest.raises(RuntimeError, match="write failed"):
+        workflow.write_to_question_library(org_unit_id=10, questions=preview.questions, confirmed=True)

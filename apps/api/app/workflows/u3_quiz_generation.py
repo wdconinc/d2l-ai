@@ -68,6 +68,7 @@ class U3QuizGenerationWorkflow:
             "max_questions": request.max_questions,
         }
         scrubbed_payload = self._scrub_payload(payload)
+        generated_at = datetime.now(UTC).isoformat()
         raw_response = self._llm_generate(scrubbed_payload)
         questions = self._parse_questions(raw_response)
         prompt_hash = hashlib.sha256(
@@ -78,7 +79,7 @@ class U3QuizGenerationWorkflow:
             model=self._model,
             prompt_hash=prompt_hash,
             version=self._prompt_version,
-            generated_at=datetime.now(UTC).isoformat(),
+            generated_at=generated_at,
         )
 
     def write_to_question_library(
@@ -105,9 +106,11 @@ class U3QuizGenerationWorkflow:
     def _parse_questions(self, raw_response: str) -> list[QuestionItem]:
         parsed_response = self._parse_json_with_repairs(raw_response)
         questions_raw = self._extract_questions(parsed_response)
-        validated_questions = [self._validate_question(question, idx + 1) for idx, question in enumerate(questions_raw)]
-        if not validated_questions:
+        if not questions_raw:
             raise QuizSchemaError("No questions were generated.")
+        validated_questions = [
+            self._validate_question(question, idx + 1) for idx, question in enumerate(questions_raw)
+        ]
         return validated_questions
 
     def _parse_json_with_repairs(self, raw_response: str) -> Any:
@@ -171,7 +174,9 @@ class U3QuizGenerationWorkflow:
                 if not isinstance(option, dict):
                     raise QuizSchemaError("Each option must be an object.")
                 if set(option.keys()) != {"text", "is_correct"}:
-                    raise QuizSchemaError("Each option must contain only 'text' and 'is_correct'.")
+                    raise QuizSchemaError(
+                        f"Each option must contain only 'text' and 'is_correct'; got {sorted(option.keys())}."
+                    )
                 if not isinstance(option["text"], str) or not option["text"].strip():
                     raise QuizSchemaError("Option text must be a non-empty string.")
                 if not isinstance(option["is_correct"], bool):
