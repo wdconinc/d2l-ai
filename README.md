@@ -30,6 +30,21 @@ Brightspace ──LTI 1.3──► UM AI Tool (FastAPI + React/Lit)
 
 See [`docs/brightspace-ai-integration-plan.md`](docs/brightspace-ai-integration-plan.md) for details.
 
+## Pre-commit checks
+
+Install and enable pre-commit hooks to run linting and formatting before each commit:
+
+```bash
+python -m pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Configured hooks include:
+- file hygiene checks (merge conflicts, trailing whitespace, EOF newlines)
+- API linting with `ruff` (`apps/api`)
+- API formatting with `black` (`apps/api`)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
