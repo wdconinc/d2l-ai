@@ -1,6 +1,6 @@
 locals {
   name_prefix              = "${var.project}-${var.environment}"
-  key_vault_name_sanitized = replace(lower(local.name_prefix), "/[^0-9a-z]/", "")
+  key_vault_name_sanitized = join("", regexall("[0-9a-z]", lower(local.name_prefix)))
   # Key Vault name max is 24 chars; reserve 6 chars for random_string.kv_suffix.
   key_vault_prefix_max_length = 18
   key_vault_name_prefix = substr(
