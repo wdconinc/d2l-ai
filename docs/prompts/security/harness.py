@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from html import escape
 from html.parser import HTMLParser
 
 SYSTEM_PROMPT = (
@@ -64,7 +65,7 @@ class _SanitizingHTMLParser(HTMLParser):
             if not key.lower().startswith("on")
         ]
         attr_text = "".join(
-            f' {key}="{value}"' if value is not None else f" {key}"
+            f' {key}="{escape(value, quote=True)}"' if value is not None else f" {key}"
             for key, value in safe_attrs
         )
         self._parts.append(f"<{tag}{attr_text}>")
