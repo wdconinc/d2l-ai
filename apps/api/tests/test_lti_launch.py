@@ -123,7 +123,11 @@ def test_instructor_launch_succeeds_with_context(client: TestClient, keypair: tu
 def test_student_launch_is_forbidden(client: TestClient, keypair: tuple[str, str]) -> None:
     platform_private_key, _ = keypair
     state, nonce = _launch_params(client)
-    token = _make_token(platform_private_key, nonce, ["Learner"])
+    token = _make_token(
+        platform_private_key,
+        nonce,
+        ["http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"],
+    )
 
     response = client.post("/api/lti/launch", data={"state": state, "id_token": token})
 

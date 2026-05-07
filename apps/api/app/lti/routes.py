@@ -45,7 +45,7 @@ def get_oidc_store() -> LTIStateNonceStore:
     return _oidc_store
 
 
-def _validate_login_hint(value: str, field_name: str) -> str:
+def _validate_hint_parameter(value: str, field_name: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9._:-]{1,512}", value):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid_{field_name}")
     return value
@@ -94,7 +94,7 @@ def oidc_login(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_target_link_uri")
 
     state, nonce = oidc_store.issue()
-    safe_login_hint = _validate_login_hint(login_hint, "login_hint")
+    safe_login_hint = _validate_hint_parameter(login_hint, "login_hint")
     query = {
         "scope": "openid",
         "response_type": "id_token",
@@ -107,7 +107,7 @@ def oidc_login(
         "nonce": nonce,
     }
     if lti_message_hint:
-        query["lti_message_hint"] = _validate_login_hint(lti_message_hint, "lti_message_hint")
+        query["lti_message_hint"] = _validate_hint_parameter(lti_message_hint, "lti_message_hint")
 
     trusted_auth_url = _trusted_auth_login_url(settings)
     inputs = "\n".join(
