@@ -16,7 +16,7 @@ def retry_with_exponential_backoff(
 ) -> object:
     """Run an operation and retry with exponential backoff when requested."""
     if max_attempts < 1:
-        raise ValueError("max_attempts must be at least 1")
+        raise ValueError(f"max_attempts must be at least 1, got {max_attempts}")
 
     for attempt in range(max_attempts):
         result = operation()

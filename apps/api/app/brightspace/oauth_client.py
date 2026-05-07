@@ -48,6 +48,7 @@ class _TokenBundle:
 
 
 TOKEN_EXPIRY_BUFFER_SECONDS = 30
+DEFAULT_TOKEN_EXPIRY_SECONDS = 3600
 DEFAULT_HTTP_TIMEOUT_SECONDS = 15.0
 
 
@@ -101,7 +102,7 @@ class BrightspaceOAuthClient:
         refresh_token = body.get("refresh_token")
         if not refresh_token:
             raise ValueError("Brightspace token exchange returned no refresh token")
-        expires_in = int(body.get("expires_in", 3600))
+        expires_in = int(body.get("expires_in", DEFAULT_TOKEN_EXPIRY_SECONDS))
         return _TokenBundle(
             access_token=body["access_token"],
             refresh_token=refresh_token,
