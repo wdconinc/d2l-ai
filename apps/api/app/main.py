@@ -62,7 +62,10 @@ def create_app(client: BrightspaceOAuthClient | None = None) -> FastAPI:
     def readyz() -> dict[str, str]:
         return {"status": "ready"}
 
-    brightspace_client = client or (_build_default_oauth_client() if _oauth_env_is_configured() else None)
+    env_client: BrightspaceOAuthClient | None = None
+    if _oauth_env_is_configured():
+        env_client = _build_default_oauth_client()
+    brightspace_client = client or env_client
     if brightspace_client is None:
         return app
 
