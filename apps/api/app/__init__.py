@@ -1,1 +1,1 @@
-"""API application package."""
+"""d2l-ai API package."""

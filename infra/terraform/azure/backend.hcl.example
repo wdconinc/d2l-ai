@@ -1,0 +1,8 @@
+# Copy to backend.hcl and provide real values before running init with remote state.
+resource_group_name  = "rg-tfstate-canada"
+storage_account_name = "sttfstatecanadacentral"
+container_name       = "tfstate"
+key                  = "d2l-ai/dev/terraform.tfstate"
+use_azuread_auth     = true
+subscription_id      = "00000000-0000-0000-0000-000000000000"
+tenant_id            = "00000000-0000-0000-0000-000000000000"
