@@ -64,7 +64,7 @@ class PromptInjectionSecurityTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(response, "Draft generated for instructor review.")
+        self.assertEqual(response, "Safe draft output.")
         self.assertIsNotNone(provider.last_prompt)
         prompt = provider.last_prompt or ""
         self.assertNotIn("7900123", prompt)

@@ -15,14 +15,14 @@ REFUSAL_MESSAGE = (
 
 _TOKEN_LIKE_PATTERN = re.compile(
     r"(ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|"
-    r"(?:api|access|refresh|secret|token)[-_ ]?(?:key|token)?\s*[:=]\s*[A-Za-z0-9._\-]{8,})",
+    r"(?:api|access|refresh|secret|token)[-_ ]?(?:key|token)?\s*[:=]\s*[-A-Za-z0-9._]{8,})",
     re.IGNORECASE,
 )
 _STUDENT_ID_PATTERN = re.compile(r"\b\d{7,}\b")
 _ROSTER_LINE_PATTERN = re.compile(
     r"(?im)^.*(?:roster|student(?:\s+name)?|student\s*id).*$"
 )
-_SCRIPT_TAG_PATTERN = re.compile(r"(?is)<script\b[^>]*>.*?</script>")
+_SCRIPT_TAG_PATTERN = re.compile(r"(?is)<script\b[^>]*>.*?</script\s*>")
 _EVENT_HANDLER_PATTERN = re.compile(r"(?i)\s+on[a-z]+\s*=\s*(['\"]).*?\1")
 _PROMPT_INJECTION_HTML_PATTERN = re.compile(
     r"(?is)\b(ignore|reveal|exfiltrate|system prompt|developer message)\b"
@@ -84,5 +84,4 @@ def run_with_provider(
 
     content = sanitize_html_topic(html_content) if html_content else user_request
     combined = f"{SYSTEM_PROMPT}\n\nCONTEXT:\n{rag_context}\n\nUSER:\n{content}"
-    provider.generate(scrub_prompt(combined))
-    return "Draft generated for instructor review."
+    return provider.generate(scrub_prompt(combined))
