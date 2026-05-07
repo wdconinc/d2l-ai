@@ -37,7 +37,14 @@ def get_lti_settings() -> LTISettings:
     key_id = os.getenv("LTI_TOOL_KEY_ID", "um-ai-tool-key")
     state_ttl_seconds = int(os.getenv("LTI_STATE_TTL_SECONDS", "300"))
     state_db_path = os.getenv("LTI_STATE_DB_PATH")
-    if not issuer or not client_id or not deployment_id or not auth_login_url or not auth_token_url or not launch_url:
+    if (
+        not issuer
+        or not client_id
+        or not deployment_id
+        or not auth_login_url
+        or not auth_token_url
+        or not launch_url
+    ):
         raise RuntimeError(
             "LTI issuer/client/deployment/login/token/launch URLs must be configured via environment variables."
         )

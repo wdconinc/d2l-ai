@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from functools import lru_cache
-from html import escape
 import logging
 import re
+from functools import lru_cache
+from html import escape
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
@@ -66,7 +66,9 @@ def _trusted_auth_login_url(settings: LTISettings) -> str:
         or auth_parts.query
         or auth_parts.fragment
     ):
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_auth_login_url")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_auth_login_url"
+        )
     return urlunsplit((auth_parts.scheme, auth_parts.netloc, auth_parts.path, "", ""))
 
 
@@ -96,7 +98,9 @@ def oidc_login(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_client")
 
     if target_link_uri != settings.launch_url:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_target_link_uri")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_target_link_uri"
+        )
 
     state, nonce = oidc_store.issue()
     safe_login_hint = _validate_hint_parameter(login_hint, "login_hint")
@@ -145,7 +149,9 @@ def launch(
             options={"require": ["exp", "iat", "nonce", "iss", "aud", "sub"]},
         )
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_id_token") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_id_token"
+        ) from exc
 
     token_deployment_id = claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id")
     if not token_deployment_id or not tool_conf.find_deployment_by_params(
@@ -155,9 +161,13 @@ def launch(
 
     nonce = claims.get("nonce")
     if not nonce:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce"
+        )
     if not oidc_store.consume(state, nonce):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce"
+        )
 
     roles = claims.get("https://purl.imsglobal.org/spec/lti/claim/roles", [])
     if not _is_instructor(roles):
@@ -167,7 +177,9 @@ def launch(
         "user_id": claims.get("sub"),
         "org_unit_id": _extract_org_unit_id(claims),
         "roles": roles,
-        "resource_link_id": claims.get("https://purl.imsglobal.org/spec/lti/claim/resource_link", {}).get("id"),
+        "resource_link_id": claims.get(
+            "https://purl.imsglobal.org/spec/lti/claim/resource_link", {}
+        ).get("id"),
     }
     correlation_id = str(uuid4())
     logger.info(
@@ -180,5 +192,7 @@ def launch(
         "correlation_id": correlation_id,
         "launch_context": launch_context,
     }
+
+
 def _reset_oidc_store_cache_for_tests() -> None:
     _build_oidc_store.cache_clear()

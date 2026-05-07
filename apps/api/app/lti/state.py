@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import sqlite3
-from threading import Lock
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from secrets import token_urlsafe
+from threading import Lock
 
 
 class LTIStateNonceStore:

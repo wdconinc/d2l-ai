@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-import re
 
 import jwt
 import pytest
@@ -21,9 +21,7 @@ def keypair() -> tuple[str, str]:
 
 
 @pytest.fixture()
-def client(
-    monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str], tmp_path: Path
-) -> TestClient:
+def client(monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str], tmp_path: Path) -> TestClient:
     _, platform_public_key = keypair
     tool_private_key, tool_public_key = _generate_rsa_keypair()
     monkeypatch.setenv("LTI_ISSUER", "https://sandbox.brightspace.com")
@@ -104,7 +102,9 @@ def test_oidc_login_rejects_untrusted_target_link_uri(client: TestClient) -> Non
     assert response.json()["detail"] == "invalid_target_link_uri"
 
 
-def test_instructor_launch_succeeds_with_context(client: TestClient, keypair: tuple[str, str]) -> None:
+def test_instructor_launch_succeeds_with_context(
+    client: TestClient, keypair: tuple[str, str]
+) -> None:
     platform_private_key, _ = keypair
     state, nonce = _launch_params(client)
     token = _make_token(
@@ -179,8 +179,12 @@ def _generate_rsa_keypair() -> tuple[str, str]:
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     ).decode("utf-8")
-    public_pem = private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode("utf-8")
+    public_pem = (
+        private_key.public_key()
+        .public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        .decode("utf-8")
+    )
     return private_pem, public_pem
