@@ -13,7 +13,9 @@ from app.brightspace.content_client import BrightspaceContentClient, ModuleTopic
 from app.llm.scrub import scrub_prompt_text
 
 _SUPPORTED_TOPIC_TYPES = {"html", "text", "markdown"}
+# Keep per-topic excerpts small to avoid sending unnecessary content to the LLM.
 _MAX_TOPIC_CHARS = 2_500
+# Keep entire prompt bounded for predictable latency/cost and model context usage.
 _MAX_PROMPT_CHARS = 12_000
 _WORKFLOW_VERSION = "u2.v1"
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -109,7 +111,7 @@ def _extract_supported_topic_text(topics: Sequence[ModuleTopic]) -> list[str]:
         if topic_type == "html":
             text = _html_to_text(text)
 
-        cleaned = " ".join(text.split()).strip()
+        cleaned = _normalize_text(text)
         if not cleaned:
             continue
 
@@ -147,6 +149,12 @@ def _html_to_text(html: str) -> str:
     return unescape(_TAG_RE.sub(" ", html))
 
 
+def _normalize_text(text: str) -> str:
+    normalized_lines = [" ".join(line.split()) for line in text.splitlines()]
+    kept_lines = [line for line in normalized_lines if line]
+    return "\n".join(kept_lines).strip()
+
+
 def _build_preview_markdown(draft: ModuleSummaryDraft) -> str:
     outcomes = "\n".join(f"- {item}" for item in draft.suggested_outcomes) or "- (none)"
     return (
@@ -172,6 +180,7 @@ def _build_deep_linking_payload(
         f"<!-- generated-by: UM-AI-Tool {provenance.version}, model={provenance.model}, "
         f"prompt-hash={provenance.prompt_hash} -->"
     )
+    # Prevent accidental script-tag termination if metadata ever contains '</script>'.
     metadata_json = json.dumps(metadata).replace("</", "<\\/")
     html = (
         f"{provenance_comment}\n"

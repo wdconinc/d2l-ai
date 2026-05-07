@@ -48,6 +48,8 @@ def test_generate_u2_module_summary_empty_module() -> None:
 
     assert "No supported topic content was found." in llm_gateway.last_prompt
     assert result.summary == "This module introduces key concepts."
+    assert result.suggested_outcomes == ["Explain concept A", "Apply concept B"]
+    assert result.time_on_task_minutes == 45
     assert result.deep_linking_payload is None
 
 
@@ -93,3 +95,29 @@ def test_generate_u2_module_summary_ignores_unsupported_topic_types() -> None:
     assert "HTML: Use this text." in llm_gateway.last_prompt
     assert result.deep_linking_payload is not None
     assert "<!-- generated-by: UM-AI-Tool" in result.deep_linking_payload.html
+
+
+def test_generate_u2_module_summary_scrubs_student_identifiers() -> None:
+    topics = [
+        ModuleTopic(
+            id=1,
+            title="Roster Notes",
+            topic_type="text",
+            content="Student Name: Alex Learner, Email: alex@example.com, ID: 1234567",
+        ),
+    ]
+    content_client = StubContentClient(topics=topics)
+    llm_gateway = CapturingLLMGateway()
+
+    asyncio.run(
+        generate_u2_module_summary(
+            org_unit_id=1,
+            module_id=2,
+            content_client=content_client,
+            llm_gateway=llm_gateway,
+        )
+    )
+
+    assert "Alex Learner" not in llm_gateway.last_prompt
+    assert "alex@example.com" not in llm_gateway.last_prompt
+    assert "1234567" not in llm_gateway.last_prompt
