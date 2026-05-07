@@ -30,7 +30,7 @@ class Provenance(BaseModel):
     model: str = "pending"
     prompt_hash: str = "pending"
     version: str = "v0"
-    generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    generated_at: str = Field(default_factory=lambda: datetime.now(tz=UTC).isoformat())
 
 
 class ContentSelection(BaseModel):
@@ -120,7 +120,7 @@ class DeepLinkingResponseBuilder:
             MESSAGE_TYPE_CLAIM: "LtiDeepLinkingResponse",
             VERSION_CLAIM: "1.3.0",
             CONTENT_ITEMS_CLAIM: items,
-            "iat": int(datetime.now(UTC).timestamp()),
+            "iat": int(datetime.now(tz=UTC).timestamp()),
             "nonce": str(uuid4()),
         }
         if DEPLOYMENT_ID_CLAIM in launch_claims:
