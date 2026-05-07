@@ -180,5 +180,5 @@ def launch(
         "correlation_id": correlation_id,
         "launch_context": launch_context,
     }
-def reset_oidc_store_cache() -> None:
+def _reset_oidc_store_cache_for_tests() -> None:
     _build_oidc_store.cache_clear()

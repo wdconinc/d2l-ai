@@ -20,7 +20,7 @@ class LTISettings:
     tool_public_key_pem: str
     key_id: str
     state_ttl_seconds: int = 300
-    state_db_path: str = "/tmp/d2l-ai-lti-state.db"
+    state_db_path: str = ""
 
 
 @lru_cache(maxsize=1)
@@ -36,11 +36,13 @@ def get_lti_settings() -> LTISettings:
     tool_public_key_pem = os.getenv("LTI_TOOL_PUBLIC_KEY_PEM")
     key_id = os.getenv("LTI_TOOL_KEY_ID", "um-ai-tool-key")
     state_ttl_seconds = int(os.getenv("LTI_STATE_TTL_SECONDS", "300"))
-    state_db_path = os.getenv("LTI_STATE_DB_PATH", "/tmp/d2l-ai-lti-state.db")
+    state_db_path = os.getenv("LTI_STATE_DB_PATH")
     if not issuer or not client_id or not deployment_id or not auth_login_url or not auth_token_url or not launch_url:
         raise RuntimeError(
             "LTI issuer/client/deployment/login/token/launch URLs must be configured via environment variables."
         )
+    if not state_db_path:
+        raise RuntimeError("LTI_STATE_DB_PATH must be configured.")
     if not platform_public_key_pem or not tool_private_key_pem or not tool_public_key_pem:
         raise RuntimeError(
             "LTI keys must be configured via LTI_PLATFORM_PUBLIC_KEY_PEM, "

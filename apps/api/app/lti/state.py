@@ -1,57 +1,61 @@
 from __future__ import annotations
 
 import sqlite3
+from threading import Lock
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from secrets import token_urlsafe
 
 
 class LTIStateNonceStore:
-    def __init__(self, ttl_seconds: int = 300, database_path: str = "/tmp/d2l-ai-lti-state.db") -> None:
+    def __init__(self, ttl_seconds: int = 300, database_path: str = "") -> None:
         self.ttl_seconds = ttl_seconds
         self.database_path = database_path
+        self._lock = Lock()
         Path(database_path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(database_path, check_same_thread=False)
         self._initialize()
 
     def issue(self) -> tuple[str, str]:
-        self._cleanup_expired()
-        state = token_urlsafe(32)
-        nonce = token_urlsafe(32)
-        expires_at = self._expiry_timestamp()
-        with self._conn:
-            self._conn.execute(
-                "INSERT INTO lti_states(state, nonce, expires_at) VALUES (?, ?, ?)",
-                (state, nonce, expires_at),
-            )
+        with self._lock:
+            self._cleanup_expired()
+            state = token_urlsafe(32)
+            nonce = token_urlsafe(32)
+            expires_at = self._expiry_timestamp()
+            with self._conn:
+                self._conn.execute(
+                    "INSERT INTO lti_states(state, nonce, expires_at) VALUES (?, ?, ?)",
+                    (state, nonce, expires_at),
+                )
         return state, nonce
 
     def consume(self, state: str, nonce: str) -> bool:
-        self._cleanup_expired()
-        with self._conn:
-            row = self._conn.execute(
-                "SELECT nonce FROM lti_states WHERE state = ?",
-                (state,),
-            ).fetchone()
-            if row is None:
-                return False
+        with self._lock:
+            self._cleanup_expired()
+            with self._conn:
+                row = self._conn.execute(
+                    "SELECT nonce FROM lti_states WHERE state = ?",
+                    (state,),
+                ).fetchone()
+                if row is None:
+                    return False
 
-            self._conn.execute("DELETE FROM lti_states WHERE state = ?", (state,))
-            if row[0] != nonce:
-                return False
+                self._conn.execute("DELETE FROM lti_states WHERE state = ?", (state,))
+                if row[0] != nonce:
+                    return False
 
-            nonce_exists = self._conn.execute(
-                "SELECT nonce FROM lti_used_nonces WHERE nonce = ?",
-                (nonce,),
-            ).fetchone()
-            if nonce_exists is not None:
-                return False
+                nonce_exists = self._conn.execute(
+                    "SELECT nonce FROM lti_used_nonces WHERE nonce = ?",
+                    (nonce,),
+                ).fetchone()
+                if nonce_exists is not None:
+                    return False
 
-            self._conn.execute(
-                "INSERT INTO lti_used_nonces(nonce, expires_at) VALUES (?, ?)",
-                (nonce, self._expiry_timestamp()),
-            )
-            return True
+                self._conn.execute(
+                    "INSERT INTO lti_used_nonces(nonce, expires_at) VALUES (?, ?)",
+                    (nonce, self._expiry_timestamp()),
+                )
+                return True
 
     def _initialize(self) -> None:
         with self._conn:

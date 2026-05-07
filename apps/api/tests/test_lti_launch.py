@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 
 from app.lti.config import get_lti_settings, get_tool_conf
-from app.lti.routes import reset_oidc_store_cache
+from app.lti.routes import _reset_oidc_store_cache_for_tests
 from app.main import app
 
 
@@ -38,7 +38,7 @@ def client(
     monkeypatch.setenv("LTI_STATE_DB_PATH", str(tmp_path / "lti-state.db"))
     get_lti_settings.cache_clear()
     get_tool_conf.cache_clear()
-    reset_oidc_store_cache()
+    _reset_oidc_store_cache_for_tests()
     return TestClient(app)
 
 
