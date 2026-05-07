@@ -15,6 +15,9 @@ on:
       - main
       - 'copilot/**'
 
+permissions:
+  contents: read
+
 jobs:
   axe-core:
     runs-on: ubuntu-latest
