@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 from urllib.parse import urlencode
@@ -9,15 +8,15 @@ from uuid import uuid4
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, status
 from fastapi.responses import RedirectResponse
-from jwt.algorithms import RSAAlgorithm
-from pylti1p3 import __version__ as pylti1p3_version
+from pylti1p3.tool_config import ToolConfDict
 
-from app.lti.config import LTISettings, get_lti_settings
+from app.lti.config import LTISettings, get_lti_settings, get_tool_conf
 from app.lti.state import LTIStateNonceStore
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/lti", tags=["lti"])
+_oidc_store = LTIStateNonceStore(ttl_seconds=300)
 
 
 def _is_instructor(roles: list[str]) -> bool:
@@ -40,22 +39,17 @@ def _extract_org_unit_id(claims: dict[str, Any]) -> str | None:
     return custom.get("org_unit_id") or context.get("id")
 
 
-def _build_jwk(settings: LTISettings) -> dict[str, Any]:
-    key = serialization_load_public_key(settings.tool_public_key_pem)
-    jwk = json.loads(RSAAlgorithm.to_jwk(key))
-    jwk.update({"kid": settings.key_id, "alg": "RS256", "use": "sig"})
-    return jwk
-
-
-def serialization_load_public_key(public_key_pem: str) -> Any:
-    from cryptography.hazmat.primitives import serialization
-
-    return serialization.load_pem_public_key(public_key_pem.encode("utf-8"))
+def get_oidc_store() -> LTIStateNonceStore:
+    return _oidc_store
 
 
 @router.get("/jwks")
-def jwks(settings: LTISettings = Depends(get_lti_settings)) -> dict[str, list[dict[str, Any]]]:
-    return {"keys": [_build_jwk(settings)]}
+def jwks(tool_conf: ToolConfDict = Depends(get_tool_conf)) -> dict[str, list[dict[str, Any]]]:
+    settings = get_lti_settings()
+    jwks_payload = tool_conf.get_jwks(settings.issuer, settings.client_id)
+    for key in jwks_payload.get("keys", []):
+        key["kid"] = settings.key_id
+    return jwks_payload
 
 
 @router.get("/login")
@@ -66,12 +60,16 @@ def oidc_login(
     lti_message_hint: str | None = None,
     client_id: str | None = None,
     settings: LTISettings = Depends(get_lti_settings),
+    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
 ) -> RedirectResponse:
     if iss != settings.issuer:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_issuer")
 
     if client_id and client_id != settings.client_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_client")
+
+    if target_link_uri != settings.launch_url:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_target_link_uri")
 
     state, nonce = oidc_store.issue()
     query = {
@@ -80,7 +78,7 @@ def oidc_login(
         "response_mode": "form_post",
         "prompt": "none",
         "client_id": settings.client_id,
-        "redirect_uri": target_link_uri,
+        "redirect_uri": settings.launch_url,
         "login_hint": login_hint,
         "state": state,
         "nonce": nonce,
@@ -96,6 +94,8 @@ def launch(
     state: str = Form(...),
     id_token: str = Form(...),
     settings: LTISettings = Depends(get_lti_settings),
+    tool_conf: ToolConfDict = Depends(get_tool_conf),
+    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
 ) -> dict[str, Any]:
     if not oidc_store.has_state(state):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_state")
@@ -113,7 +113,9 @@ def launch(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_id_token") from exc
 
     token_deployment_id = claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id")
-    if token_deployment_id != settings.deployment_id:
+    if not token_deployment_id or not tool_conf.find_deployment_by_params(
+        settings.issuer, token_deployment_id, settings.client_id
+    ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid_deployment")
 
     nonce = claims.get("nonce")
@@ -140,13 +142,9 @@ def launch(
         "status": "ok",
         "correlation_id": correlation_id,
         "launch_context": launch_context,
-        "lti_library": f"pylti1p3/{pylti1p3_version}",
     }
 
 
 def configure_oidc_store(settings: LTISettings) -> None:
-    global oidc_store
-    oidc_store = LTIStateNonceStore(ttl_seconds=settings.state_ttl_seconds)
-
-
-configure_oidc_store(get_lti_settings())
+    global _oidc_store
+    _oidc_store = LTIStateNonceStore(ttl_seconds=settings.state_ttl_seconds)

@@ -9,35 +9,30 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 
-from app.lti.config import get_lti_settings
+from app.lti.config import get_lti_settings, get_tool_conf
 from app.lti.routes import configure_oidc_store
 from app.main import app
 
 
 @pytest.fixture()
 def keypair() -> tuple[str, str]:
-    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    private_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
-    ).decode("utf-8")
-    public_pem = private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode("utf-8")
-    return private_pem, public_pem
+    return _generate_random_keypair()
 
 
 @pytest.fixture()
 def client(monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str]) -> TestClient:
     _, platform_public_key = keypair
+    tool_private_key, tool_public_key = _generate_random_keypair()
     monkeypatch.setenv("LTI_ISSUER", "https://sandbox.brightspace.com")
     monkeypatch.setenv("LTI_CLIENT_ID", "client-123")
     monkeypatch.setenv("LTI_DEPLOYMENT_ID", "deployment-abc")
     monkeypatch.setenv("LTI_AUTH_LOGIN_URL", "https://sandbox.brightspace.com/d2l/lti/auth")
+    monkeypatch.setenv("LTI_LAUNCH_URL", "https://tool.example/api/lti/launch")
     monkeypatch.setenv("LTI_PLATFORM_PUBLIC_KEY_PEM", platform_public_key)
+    monkeypatch.setenv("LTI_TOOL_PRIVATE_KEY_PEM", tool_private_key)
+    monkeypatch.setenv("LTI_TOOL_PUBLIC_KEY_PEM", tool_public_key)
     get_lti_settings.cache_clear()
+    get_tool_conf.cache_clear()
     configure_oidc_store(get_lti_settings())
     return TestClient(app)
 
@@ -86,6 +81,21 @@ def test_jwks_endpoint_returns_public_key(client: TestClient) -> None:
     assert len(data["keys"]) == 1
     assert data["keys"][0]["kty"] == "RSA"
     assert data["keys"][0]["kid"] == "um-ai-tool-key"
+
+
+def test_oidc_login_rejects_untrusted_target_link_uri(client: TestClient) -> None:
+    response = client.get(
+        "/api/lti/login",
+        params={
+            "iss": "https://sandbox.brightspace.com",
+            "login_hint": "hint",
+            "target_link_uri": "https://attacker.example/steal",
+            "client_id": "client-123",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "invalid_target_link_uri"
 
 
 def test_instructor_launch_succeeds_with_context(client: TestClient, keypair: tuple[str, str]) -> None:
@@ -139,7 +149,7 @@ def test_replayed_nonce_fails(client: TestClient, keypair: tuple[str, str]) -> N
 
 def test_invalid_signature_fails(client: TestClient, keypair: tuple[str, str]) -> None:
     state, nonce = _launch_params(client)
-    wrong_private_key, _ = _generate_keypair()
+    wrong_private_key, _ = _generate_random_keypair()
     wrong_token = _make_token(
         wrong_private_key,
         nonce,
@@ -152,7 +162,7 @@ def test_invalid_signature_fails(client: TestClient, keypair: tuple[str, str]) -
     assert response.json()["detail"] == "invalid_id_token"
 
 
-def _generate_keypair() -> tuple[str, str]:
+def _generate_random_keypair() -> tuple[str, str]:
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
