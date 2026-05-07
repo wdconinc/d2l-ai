@@ -12,6 +12,8 @@ on:
 
 jobs:
   checks:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     defaults:
       run:

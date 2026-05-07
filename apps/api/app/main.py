@@ -1,3 +1,6 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.logging import configure_logging
@@ -6,12 +9,14 @@ from app.telemetry import configure_telemetry
 
 configure_logging(settings.log_level)
 
-app = FastAPI(title="d2l-ai API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    configure_telemetry(_app, settings)
+    yield
 
 
-@app.on_event("startup")
-def startup_event() -> None:
-    configure_telemetry(app, settings)
+app = FastAPI(title="d2l-ai API", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/healthz")
