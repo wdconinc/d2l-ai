@@ -101,7 +101,15 @@ def set_budget_caps(
             hard_limit_usd=payload.hard_limit_usd,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail="errors.budget.invalid_configuration") from exc
+        error_map = {
+            "soft_limit_usd must be >= 0": "errors.budget.soft_limit_negative",
+            "hard_limit_usd must be >= 0": "errors.budget.hard_limit_negative",
+            "soft_limit_usd cannot exceed hard_limit_usd": "errors.budget.soft_exceeds_hard",
+        }
+        raise HTTPException(
+            status_code=400,
+            detail=error_map.get(str(exc), "errors.budget.invalid_configuration"),
+        ) from exc
     return BudgetCapsResponse(
         tenant_id=tenant_id,
         soft_limit_usd=caps.soft_limit_usd,
@@ -157,6 +165,11 @@ def record_llm_call(
     _: None = Depends(require_llm_call_token),
     meter: UsageMeter = Depends(get_meter),
 ) -> MeteredCallResponse:
+    """Record one metered LLM call for a tenant after bearer-token authentication.
+
+    Returns aggregated usage and optional soft-cap warning. If the hard cap would be
+    exceeded, the call is rejected and no usage is recorded.
+    """
     try:
         decision = meter.record_llm_call(
             tenant_id=tenant_id,

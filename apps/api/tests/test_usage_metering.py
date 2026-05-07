@@ -43,7 +43,7 @@ def test_soft_cap_emits_warning() -> None:
         estimated_cost_usd=0.05,
     )
 
-    assert decision.warning is not None
+    assert decision.warning == "warnings.budget.soft_cap_reached"
 
 
 def test_hard_cap_blocks_new_calls() -> None:
@@ -67,6 +67,7 @@ def test_hard_cap_blocks_new_calls() -> None:
             estimated_cost_usd=0.02,
         )
     assert str(exc_info.value) == "errors.budget.hard_cap_reached"
+    assert meter.get_tenant_usage("tenant-1").estimated_cost_usd == pytest.approx(0.05)
 
 
 def test_concurrent_calls_accumulate_usage_safely() -> None:
