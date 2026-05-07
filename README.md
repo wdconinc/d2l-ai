@@ -30,6 +30,16 @@ Brightspace ──LTI 1.3──► UM AI Tool (FastAPI + React/Lit)
 
 See [`docs/brightspace-ai-integration-plan.md`](docs/brightspace-ai-integration-plan.md) for details.
 
+## Usage metering (draft implementation)
+
+- API app entrypoint: `apps/api/app/main.py`
+- Admin endpoints:
+  - `POST /admin/tenants/{tenant_id}/budget-caps`
+  - `GET /admin/tenants/{tenant_id}/budget-caps`
+  - `GET /admin/tenants/{tenant_id}/usage`
+- Metered LLM-call endpoint: `POST /llm/calls`
+- Targeted tests: `PYTHONPATH=apps/api python -m unittest discover -s apps/api/tests -q`
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
