@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import httpx
 import pytest
 
-from app.brightspace.clients import BrightspaceApiConfig, ContentClient, QuestionLibraryClient, RubricsClient
+from app.brightspace.clients import (
+    BrightspaceApiConfig,
+    ContentClient,
+    QuestionLibraryClient,
+    RubricsClient,
+)
 
 
-def _build_client(handler) -> httpx.Client:
+def _build_client(handler: Callable[[httpx.Request], httpx.Response]) -> httpx.Client:
     return httpx.Client(transport=httpx.MockTransport(handler))
 
 
@@ -54,11 +61,18 @@ def test_rate_limit_retries_429_and_503_then_succeeds() -> None:
     def handler(_: httpx.Request) -> httpx.Response:
         status = statuses.pop(0)
         headers = {"Retry-After": "1"} if status == 429 else {}
-        body = {"Objects": [{"RubricId": 7, "Name": "Essay"}], "PagingInfo": {"HasMoreItems": False}}
+        body = {
+            "Objects": [{"RubricId": 7, "Name": "Essay"}],
+            "PagingInfo": {"HasMoreItems": False},
+        }
         return httpx.Response(status, headers=headers, json=body)
 
     client = RubricsClient(
-        BrightspaceApiConfig(base_url="https://tenant.brightspace.com", max_retries=3, backoff_seconds=0.1),
+        BrightspaceApiConfig(
+            base_url="https://tenant.brightspace.com",
+            max_retries=3,
+            backoff_seconds=0.1,
+        ),
         http_client=_build_client(handler),
         sleep=sleep_calls.append,
     )

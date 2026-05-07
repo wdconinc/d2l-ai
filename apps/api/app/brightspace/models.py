@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +13,7 @@ class PagingInfo(BaseModel):
     bookmark: str | None = Field(default=None, alias="Bookmark")
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     items: list[T] = Field(default_factory=list, alias="Objects")
     paging_info: PagingInfo | None = Field(default=None, alias="PagingInfo")
 

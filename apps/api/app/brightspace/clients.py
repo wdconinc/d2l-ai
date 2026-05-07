@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from time import sleep as default_sleep
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import TypeAdapter
@@ -11,7 +12,7 @@ from app.brightspace.models import (
     ContentModule,
     ContentTopic,
     CreatedArtifact,
-    PaginatedResponse,
+    PagingInfo,
     QuestionLibraryQuestion,
     Quiz,
     Rubric,
@@ -65,17 +66,20 @@ class BrightspaceApiClient:
     def _get_paginated(self, path: str, model_type: type[T]) -> list[T]:
         results: list[T] = []
         bookmark: str | None = None
-        adapter = TypeAdapter(PaginatedResponse[model_type])
+        item_adapter = TypeAdapter(model_type)
+        paging_info_adapter: TypeAdapter[PagingInfo | None] = TypeAdapter(PagingInfo | None)
 
         while True:
             params = {"bookmark": bookmark} if bookmark else None
             response = self._request("GET", path, params=params)
-            payload = adapter.validate_python(response.json())
-            results.extend(payload.items)
+            payload = response.json()
+            for item in payload.get("Objects", []):
+                results.append(item_adapter.validate_python(item))
+            paging_info = paging_info_adapter.validate_python(payload.get("PagingInfo"))
 
-            if not payload.paging_info or not payload.paging_info.has_more_items:
+            if not paging_info or not paging_info.has_more_items:
                 return results
-            bookmark = payload.paging_info.bookmark
+            bookmark = paging_info.bookmark
 
 
 class ContentClient(BrightspaceApiClient):
