@@ -1,0 +1,26 @@
+[project]
+name = "d2l-ai-api"
+version = "0.1.0"
+description = "LTI 1.3 launch foundation for Brightspace"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115.0,<1.0.0",
+  "pylti1p3>=2.0.0,<3.0.0",
+  "pyjwt[crypto]>=2.10.0,<3.0.0",
+  "python-multipart>=0.0.20,<1.0.0",
+  "uvicorn>=0.34.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28.0,<1.0.0",
+  "pytest>=8.3.0,<9.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
