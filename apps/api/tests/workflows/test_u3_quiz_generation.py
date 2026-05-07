@@ -25,10 +25,10 @@ class FailingQuestionLibraryClient(FakeQuestionLibraryClient):
         raise RuntimeError("write failed")
 
 
-def _build_workflow(llm_payload: str, client: FakeQuestionLibraryClient | None = None) -> U3QuizGenerationWorkflow:
+def _build_workflow(llm_response: str, client: FakeQuestionLibraryClient | None = None) -> U3QuizGenerationWorkflow:
     fake_client = client or FakeQuestionLibraryClient()
     return U3QuizGenerationWorkflow(
-        llm_generate=lambda _: llm_payload,
+        llm_generate=lambda _: llm_response,
         scrub_payload=lambda payload: payload,
         question_library_client=fake_client,
         model="test-model",

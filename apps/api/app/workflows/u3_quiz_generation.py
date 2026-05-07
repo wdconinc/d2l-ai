@@ -160,7 +160,7 @@ class U3QuizGenerationWorkflow:
             raise QuizSchemaError("feedback must be a string when provided.")
 
         allowed_fields = {"item_id", "question_type", "question_text", "feedback"}
-        options: list[dict[str, object]] | None = None
+        options: list[dict[str, str | bool]] | None = None
         answer_text: str | None = None
 
         if question_type == "mcq":
