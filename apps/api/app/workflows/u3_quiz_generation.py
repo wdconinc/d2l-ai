@@ -30,7 +30,7 @@ class QuestionItem:
     item_id: str
     question_type: str
     question_text: str
-    options: list[dict[str, object]] | None = None
+    options: list[dict[str, str | bool]] | None = None
     answer_text: str | None = None
     feedback: str | None = None
 
@@ -168,7 +168,7 @@ class U3QuizGenerationWorkflow:
             options = question.get("options")
             if not isinstance(options, list) or len(options) < 2:
                 raise QuizSchemaError("MCQ items require at least 2 options.")
-            cleaned_options: list[dict[str, object]] = []
+            cleaned_options: list[dict[str, str | bool]] = []
             correct_answers = 0
             for option in options:
                 if not isinstance(option, dict):

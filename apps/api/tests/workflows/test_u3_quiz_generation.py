@@ -6,6 +6,7 @@ from app.brightspace.question_library_client import QuestionLibraryWriteRequest
 from app.workflows.u3_quiz_generation import (
     QuizGenerationRequest,
     QuizSchemaError,
+    QuestionItem,
     U3QuizGenerationWorkflow,
 )
 
@@ -125,7 +126,7 @@ def test_write_to_question_library_uses_typed_client_after_confirmation() -> Non
         QuizGenerationRequest(org_unit_id=10, module_id=2, topic_ids=[1], readings=["Topic"])
     )
     edited = [
-        preview.questions[0].__class__(
+        QuestionItem(
             item_id=preview.questions[0].item_id,
             question_type=preview.questions[0].question_type,
             question_text="Edited text",

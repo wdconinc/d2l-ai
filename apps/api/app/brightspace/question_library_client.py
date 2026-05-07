@@ -9,7 +9,7 @@ class QuestionLibraryWriteRequest:
     org_unit_id: int
     question_text: str
     question_type: str
-    options: list[dict[str, object]] | None = None
+    options: list[dict[str, str | bool]] | None = None
     answer_text: str | None = None
     feedback: str | None = None
 
