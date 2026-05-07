@@ -1,0 +1,28 @@
+name: Prompt Regression
+
+on:
+  pull_request:
+    paths:
+      - "docs/prompts/**"
+      - ".github/workflows/prompt-regression.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/prompts/**"
+      - ".github/workflows/prompt-regression.yml"
+
+jobs:
+  prompt-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run prompt regression harness
+        run: python docs/prompts/eval_harness.py --provider fixture

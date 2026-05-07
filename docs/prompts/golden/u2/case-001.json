@@ -1,0 +1,28 @@
+{
+  "case_id": "u2-001",
+  "prompt_id": "u2_module_summary",
+  "version": "v1.0.0",
+  "input": {
+    "module_title": "Photosynthesis Basics",
+    "topics": [
+      "Light-dependent reactions",
+      "Calvin cycle"
+    ]
+  },
+  "expected_output": {
+    "summary_markdown": "This module introduces photosynthesis by linking light-dependent reactions to the Calvin cycle.",
+    "learning_outcomes": [
+      "Explain the purpose of light-dependent reactions.",
+      "Describe how the Calvin cycle fixes carbon."
+    ],
+    "estimated_minutes": 45
+  },
+  "fixture_output": {
+    "summary_markdown": "This module introduces photosynthesis by linking light-dependent reactions to the Calvin cycle.",
+    "learning_outcomes": [
+      "Explain the purpose of light-dependent reactions.",
+      "Describe how the Calvin cycle fixes carbon."
+    ],
+    "estimated_minutes": 45
+  }
+}
