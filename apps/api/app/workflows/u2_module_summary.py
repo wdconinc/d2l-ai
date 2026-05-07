@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
-from html import escape
-from html import unescape
 import json
 import re
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from html import escape, unescape
+from typing import Protocol
 
 from app.brightspace.content_client import BrightspaceContentClient, ModuleTopic
 from app.llm.scrub import scrub_prompt_text
@@ -74,7 +74,7 @@ async def generate_u2_module_summary(
     draft = await llm_gateway.summarize_module(scrubbed_prompt)
 
     prompt_hash = sha256(scrubbed_prompt.encode("utf-8")).hexdigest()
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     provenance = WorkflowProvenance(
         model=draft.model,
         prompt_hash=prompt_hash,
@@ -205,7 +205,7 @@ def _build_deep_linking_payload(
         "<article>\n"
         f"<h1>{escape(title)}</h1>\n"
         f"<pre>{escape(preview_markdown)}</pre>\n"
-        f"<script type=\"application/json\" id=\"um-ai-provenance\">{metadata_json}</script>\n"
+        f'<script type="application/json" id="um-ai-provenance">{metadata_json}</script>\n'
         "</article>"
     )
     return DeepLinkingPayload(title=title, html=html, metadata=metadata)
