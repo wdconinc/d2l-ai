@@ -19,7 +19,7 @@ apps/api/         # FastAPI backend
 apps/web/         # React + Lit LTI launch UI
 apps/admin/       # Next.js admin console
 packages/shared-types/  # OpenAPI + generated TS types
-infra/terraform/  # Azure CA Central
+infra/terraform/<provider>/  # Provider-specific infra stacks (azure, future providers)
 docs/             # Architecture, prompts, DPIA
 .github/workflows/
 ```
