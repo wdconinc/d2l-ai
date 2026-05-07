@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from time import sleep as default_sleep
 import time
@@ -55,7 +56,7 @@ class BrightspaceOAuthClient:
         token_store: EncryptedRefreshTokenStore,
         *,
         http_client: httpx.Client | None = None,
-        sleep=default_sleep,
+        sleep: Callable[[float], None] = default_sleep,
     ) -> None:
         self._config = config
         self._store = token_store

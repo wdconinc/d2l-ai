@@ -23,5 +23,3 @@ def retry_with_exponential_backoff(
         if not should_retry(result) or attempt == max_attempts - 1:
             return result
         sleep(base_delay_seconds * (2**attempt))
-
-    return operation()

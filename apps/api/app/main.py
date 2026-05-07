@@ -22,7 +22,7 @@ def _build_default_client() -> BrightspaceOAuthClient:
         lp_version=os.environ.get("BRIGHTSPACE_LP_VERSION", "1.51"),
     )
     token_store = EncryptedRefreshTokenStore(
-        db_path=os.environ.get("BRIGHTSPACE_TOKEN_DB_PATH", "/tmp/brightspace_tokens.db"),
+        db_path=os.environ["BRIGHTSPACE_TOKEN_DB_PATH"],
         encryption_key=os.environ["BRIGHTSPACE_TOKEN_ENCRYPTION_KEY"],
     )
     return BrightspaceOAuthClient(config=config, token_store=token_store)
@@ -53,6 +53,7 @@ _required_env = {
     "BRIGHTSPACE_CLIENT_ID",
     "BRIGHTSPACE_CLIENT_SECRET",
     "BRIGHTSPACE_REDIRECT_URI",
+    "BRIGHTSPACE_TOKEN_DB_PATH",
     "BRIGHTSPACE_TOKEN_ENCRYPTION_KEY",
 }
 app = create_app() if _required_env.issubset(os.environ) else FastAPI()
