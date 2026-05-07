@@ -4,8 +4,8 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from cryptography.fernet import Fernet
 import httpx
+from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 
 from app.brightspace.oauth_client import BrightspaceOAuthClient, BrightspaceOAuthConfig
@@ -13,7 +13,11 @@ from app.brightspace.token_store import EncryptedRefreshTokenStore
 from app.main import create_app
 
 
-def _build_client(tmp_path: Path, transport: httpx.MockTransport, sleeps: list[float] | None = None):
+def _build_client(
+    tmp_path: Path,
+    transport: httpx.MockTransport,
+    sleeps: list[float] | None = None,
+):
     """Build an OAuth client and encrypted store backed by a temporary test database."""
     config = BrightspaceOAuthConfig(
         tenant="sandbox",
@@ -56,7 +60,10 @@ def test_refresh_tokens_are_encrypted_at_rest(tmp_path: Path) -> None:
 
     with sqlite3.connect(tmp_path / "tokens.db") as conn:
         row = conn.execute(
-            "SELECT refresh_token_encrypted FROM app_brightspace_tokens WHERE tenant = ? AND token_owner = ?",
+            (
+                "SELECT refresh_token_encrypted "
+                "FROM app_brightspace_tokens WHERE tenant = ? AND token_owner = ?"
+            ),
             ("sandbox", "service"),
         ).fetchone()
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
-import time
 from time import sleep as default_sleep
 from urllib.parse import urlencode
 
@@ -111,15 +111,22 @@ class BrightspaceOAuthClient:
 
     def _store_token_bundle(self, token_owner: str, token_bundle: _TokenBundle) -> None:
         self._store.save_refresh_token(
-            tenant=self._config.tenant, token_owner=token_owner, refresh_token=token_bundle.refresh_token
+            tenant=self._config.tenant,
+            token_owner=token_owner,
+            refresh_token=token_bundle.refresh_token,
         )
         self._token_cache[token_owner] = token_bundle
 
     def _refresh_access_token(self, token_owner: str) -> str:
-        refresh_token = self._store.get_refresh_token(tenant=self._config.tenant, token_owner=token_owner)
+        refresh_token = self._store.get_refresh_token(
+            tenant=self._config.tenant,
+            token_owner=token_owner,
+        )
         if refresh_token is None:
             raise KeyError(f"No refresh token stored for owner '{token_owner}'")
-        token_bundle = self._exchange_tokens({"grant_type": "refresh_token", "refresh_token": refresh_token})
+        token_bundle = self._exchange_tokens(
+            {"grant_type": "refresh_token", "refresh_token": refresh_token}
+        )
         self._store_token_bundle(token_owner, token_bundle)
         return token_bundle.access_token
 
