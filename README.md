@@ -37,7 +37,10 @@ See [`docs/brightspace-ai-integration-plan.md`](docs/brightspace-ai-integration-
   - `POST /admin/tenants/{tenant_id}/budget-caps`
   - `GET /admin/tenants/{tenant_id}/budget-caps`
   - `GET /admin/tenants/{tenant_id}/usage`
-- Metered LLM-call endpoint: `POST /llm/calls`
+- Metered LLM-call endpoint: `POST /tenants/{tenant_id}/llm/calls`
+- Auth:
+  - Admin endpoints require `Authorization: Bearer <token>` matching `D2L_AI_ADMIN_API_TOKEN`
+  - LLM-call endpoint requires `Authorization: Bearer <token>` matching `D2L_AI_LLM_CALL_TOKEN`
 - Targeted tests: `PYTHONPATH=apps/api python -m pytest apps/api/tests -q`
 
 ## License
