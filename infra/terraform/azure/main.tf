@@ -3,7 +3,7 @@ locals {
   key_vault_name_sanitized = replace(lower(local.name_prefix), "/[^0-9a-z]/", "")
   # Key Vault name max is 24 chars; reserve 6 chars for random_string.kv_suffix.
   key_vault_name_prefix = substr(
-    length(local.key_vault_name_sanitized) > 0 ? local.key_vault_name_sanitized : "kv",
+    local.key_vault_name_sanitized != "" ? local.key_vault_name_sanitized : "kv",
     0,
     18,
   )
