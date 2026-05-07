@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from urllib.parse import parse_qs, urlparse
+import re
 
 import jwt
 import pytest
@@ -47,12 +47,13 @@ def _launch_params(client: TestClient) -> tuple[str, str]:
             "lti_message_hint": "msg",
             "client_id": "client-123",
         },
-        follow_redirects=False,
     )
-    assert response.status_code == 307
-    parsed = urlparse(response.headers["location"])
-    query = parse_qs(parsed.query)
-    return query["state"][0], query["nonce"][0]
+    assert response.status_code == 200
+    state = re.search(r'name="state" value="([^"]+)"', response.text)
+    nonce = re.search(r'name="nonce" value="([^"]+)"', response.text)
+    assert state is not None
+    assert nonce is not None
+    return state.group(1), nonce.group(1)
 
 
 def _make_token(private_key_pem: str, nonce: str, roles: list[str]) -> str:

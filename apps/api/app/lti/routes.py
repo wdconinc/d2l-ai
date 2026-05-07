@@ -3,12 +3,13 @@ from __future__ import annotations
 import logging
 import re
 from typing import Any
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
+from html import escape
 
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse
 from pylti1p3.tool_config import ToolConfDict
 
 from app.lti.config import LTISettings, get_lti_settings, get_tool_conf
@@ -82,7 +83,7 @@ def oidc_login(
     client_id: str | None = None,
     settings: LTISettings = Depends(get_lti_settings),
     oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
-) -> RedirectResponse:
+) -> HTMLResponse:
     if iss != settings.issuer:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_issuer")
 
@@ -109,7 +110,16 @@ def oidc_login(
         query["lti_message_hint"] = _validate_login_hint(lti_message_hint, "lti_message_hint")
 
     trusted_auth_url = _trusted_auth_login_url(settings)
-    return RedirectResponse(url=f"{trusted_auth_url}?{urlencode(query)}")
+    inputs = "\n".join(
+        f'<input type="hidden" name="{escape(k)}" value="{escape(v)}" />' for k, v in query.items()
+    )
+    html = (
+        "<!doctype html><html><body>"
+        f'<form id="oidc-login" method="get" action="{escape(trusted_auth_url)}">{inputs}</form>'
+        "<script>document.getElementById('oidc-login').submit();</script>"
+        "</body></html>"
+    )
+    return HTMLResponse(content=html)
 
 
 @router.post("/launch")
