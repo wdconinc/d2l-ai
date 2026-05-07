@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
@@ -11,8 +13,20 @@ from app.lti.deep_linking import (
     DeepLinkingResponseBuilder,
     DeepLinkingResponseRequest,
 )
+from app.logging import configure_logging
+from app.settings import settings
+from app.telemetry import configure_telemetry
 
-app = FastAPI(title="d2l-ai API")
+configure_logging(settings.log_level)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    configure_telemetry(_app, settings)
+    yield
+
+
+app = FastAPI(title="d2l-ai API", version="0.1.0", lifespan=lifespan)
 
 
 @lru_cache(maxsize=1)
@@ -53,3 +67,8 @@ def build_deep_linking_response(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return {"deep_link_return_url": return_url, "JWT": token}
+
+
+@app.get("/readyz")
+def readyz() -> dict[str, str]:
+    return {"status": "ready"}
