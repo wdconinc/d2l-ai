@@ -1,0 +1,31 @@
+{
+  "case_id": "u3-002",
+  "prompt_id": "u3_quiz_generation",
+  "version": "v1.0.0",
+  "input": {
+    "reading_title": "Canadian Confederation",
+    "difficulty": "intermediate"
+  },
+  "expected_output": {
+    "items": [
+      {
+        "stem": "Which concern was central to debates leading to Confederation in 1867?",
+        "options": ["Space exploration", "Intercolonial defense and governance", "Digital privacy", "Nuclear policy"],
+        "answer_index": 1,
+        "bloom_level": "Understand",
+        "rationale": "Security and governance coordination were core Confederation concerns."
+      }
+    ]
+  },
+  "fixture_output": {
+    "items": [
+      {
+        "stem": "Which concern was central to debates leading to Confederation in 1867?",
+        "options": ["Space exploration", "Intercolonial defense and governance", "Digital privacy", "Nuclear policy"],
+        "answer_index": 1,
+        "bloom_level": "Understand",
+        "rationale": "Security and governance coordination were core Confederation concerns."
+      }
+    ]
+  }
+}
