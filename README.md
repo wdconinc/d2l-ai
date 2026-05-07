@@ -7,6 +7,7 @@ The integration is built as a standards-based **LTI 1.3 / LTI Advantage tool** p
 ## Documents
 
 - 📄 **[Development plan](docs/brightspace-ai-integration-plan.md)** — full architecture, roadmap, privacy, and tickets.
+- ♿ **[Accessibility guide](docs/accessibility-wcag-2.1-aa.md)** — WCAG 2.1 AA expectations, axe-core CI gate, and manual test checklists.
 - 🤖 **[.github/copilot-instructions.md](.github/copilot-instructions.md)** — repo-wide guidance for the GitHub Coding Agent.
 
 ## Status
