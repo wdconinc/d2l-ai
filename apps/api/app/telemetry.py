@@ -22,5 +22,6 @@ def configure_telemetry(app: FastAPI, settings: Settings) -> None:
     except Exception:  # pragma: no cover - defensive startup logging
         logger.exception(
             "Failed to configure OpenTelemetry instrumentation; "
-            "continuing startup without telemetry"
+            "application continues without distributed tracing "
+            "(observability impact: spans/traces unavailable)"
         )
