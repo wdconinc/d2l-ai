@@ -27,6 +27,12 @@ variable "sku_name" {
 variable "public_network_access_enabled" {
   description = "Enable public network access."
   type        = bool
+  default     = false
+}
+
+variable "purge_protection_enabled" {
+  description = "Enable purge protection."
+  type        = bool
   default     = true
 }
 

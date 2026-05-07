@@ -1,3 +1,4 @@
+# Replace with your UM Entra tenant ID.
 tenant_id = "00000000-0000-0000-0000-000000000000"
 
 # Keep secrets out of git. Export TF_VAR_postgres_administrator_password

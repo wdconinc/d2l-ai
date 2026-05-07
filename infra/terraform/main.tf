@@ -50,6 +50,7 @@ module "key_vault" {
   tenant_id                     = var.tenant_id
   sku_name                      = var.key_vault_sku_name
   enable_rbac_authorization     = true
+  purge_protection_enabled      = var.key_vault_purge_protection_enabled
   public_network_access_enabled = var.key_vault_public_network_access_enabled
   tags                          = local.tags
 }

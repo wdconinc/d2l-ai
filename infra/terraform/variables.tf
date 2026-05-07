@@ -72,13 +72,11 @@ variable "postgres_version" {
 variable "postgres_delegated_subnet_id" {
   description = "Delegated subnet ID for private PostgreSQL access."
   type        = string
-  default     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-main/subnets/snet-postgres"
 }
 
 variable "postgres_private_dns_zone_id" {
   description = "Private DNS zone ID for PostgreSQL Flexible Server."
   type        = string
-  default     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.postgres.database.azure.com"
 }
 
 variable "postgres_public_network_access_enabled" {
@@ -132,7 +130,7 @@ variable "redis_capacity" {
 variable "redis_public_network_access_enabled" {
   description = "Allow public access to Redis."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "key_vault_sku_name" {
@@ -143,6 +141,12 @@ variable "key_vault_sku_name" {
 
 variable "key_vault_public_network_access_enabled" {
   description = "Allow public network access to Key Vault."
+  type        = bool
+  default     = false
+}
+
+variable "key_vault_purge_protection_enabled" {
+  description = "Enable purge protection for Key Vault."
   type        = bool
   default     = true
 }
