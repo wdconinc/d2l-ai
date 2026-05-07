@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Callable
+from typing import Any, cast
 
 from app.brightspace.question_library_client import (
     QuestionLibraryClient,
@@ -164,6 +165,7 @@ class U3QuizGenerationWorkflow:
     def _validate_question(self, question: Any, default_index: int) -> QuestionItem:
         if not isinstance(question, dict):
             raise QuizSchemaError("Each generated question must be a JSON object.")
+        question = cast(dict[str, Any], question)
 
         question_type_raw = question.get("question_type")
         question_type = self.QUESTION_TYPE_ALIASES.get(question_type_raw, question_type_raw)
@@ -195,8 +197,10 @@ class U3QuizGenerationWorkflow:
                 if not isinstance(option, dict):
                     raise QuizSchemaError("Each option must be an object.")
                 if set(option.keys()) != {"text", "is_correct"}:
+                    option_keys = sorted(option.keys())
                     raise QuizSchemaError(
-                        f"Each option must contain only 'text' and 'is_correct'; got {sorted(option.keys())}."
+                        "Each option must contain only 'text' and 'is_correct'; "
+                        f"got {option_keys}."
                     )
                 if not isinstance(option["text"], str) or not option["text"].strip():
                     raise QuizSchemaError("Option text must be a non-empty string.")

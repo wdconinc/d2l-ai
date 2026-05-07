@@ -4,9 +4,9 @@ import pytest
 
 from app.brightspace.question_library_client import QuestionLibraryWriteRequest
 from app.workflows.u3_quiz_generation import (
+    QuestionItem,
     QuizGenerationRequest,
     QuizSchemaError,
-    QuestionItem,
     U3QuizGenerationWorkflow,
 )
 
@@ -42,7 +42,12 @@ def test_generate_preview_validates_questions_and_provenance() -> None:
         """
         {"questions":[
           {"item_id":"q1","question_type":"mcq","question_text":"2+2?","options":[{"text":"3","is_correct":false},{"text":"4","is_correct":true}]},
-          {"item_id":"q2","question_type":"short_answer","question_text":"Explain gravity.","answer_text":"It is attraction between masses."}
+          {
+            "item_id":"q2",
+            "question_type":"short_answer",
+            "question_text":"Explain gravity.",
+            "answer_text":"It is attraction between masses."
+          }
         ]}
         """
     )
@@ -68,7 +73,18 @@ def test_generate_preview_validates_questions_and_provenance() -> None:
 def test_generate_preview_repairs_fenced_json_and_alias_type() -> None:
     workflow = _build_test_workflow(
         """```json
-        {"questions":[{"question_type":"multiple_choice","question_text":"Pick one","options":[{"text":"A","is_correct":true},{"text":"B","is_correct":false}]}]}
+        {
+          "questions":[
+            {
+              "question_type":"multiple_choice",
+              "question_text":"Pick one",
+              "options":[
+                {"text":"A","is_correct":true},
+                {"text":"B","is_correct":false}
+              ]
+            }
+          ]
+        }
         ```"""
     )
 
@@ -107,14 +123,17 @@ def test_generate_preview_rejects_unexpected_fields() -> None:
 def test_write_to_question_library_requires_confirmation() -> None:
     client = FakeQuestionLibraryClient()
     workflow = _build_test_workflow(
-        '{"questions":[{"question_type":"short_answer","question_text":"Q","answer_text":"A"}]}', client
+        '{"questions":[{"question_type":"short_answer","question_text":"Q","answer_text":"A"}]}',
+        client,
     )
     preview = workflow.generate_preview(
         QuizGenerationRequest(org_unit_id=10, module_id=2, topic_ids=[1], readings=["Topic"])
     )
 
     with pytest.raises(PermissionError):
-        workflow.write_to_question_library(org_unit_id=10, questions=preview.questions, confirmed=False)
+        workflow.write_to_question_library(
+            org_unit_id=10, questions=preview.questions, confirmed=False
+        )
     assert client.requests == []
 
 
@@ -152,4 +171,6 @@ def test_write_to_question_library_surfaces_client_failures() -> None:
     )
 
     with pytest.raises(RuntimeError, match="write failed"):
-        workflow.write_to_question_library(org_unit_id=10, questions=preview.questions, confirmed=True)
+        workflow.write_to_question_library(
+            org_unit_id=10, questions=preview.questions, confirmed=True
+        )

@@ -23,5 +23,4 @@ class QuestionLibraryWriteRequest:
 class QuestionLibraryClient(Protocol):
     """Typed boundary for Question Library write operations."""
 
-    def create_question(self, request: QuestionLibraryWriteRequest) -> str:
-        ...
+    def create_question(self, request: QuestionLibraryWriteRequest) -> str: ...
