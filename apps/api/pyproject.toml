@@ -1,25 +1,52 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "d2l-ai-api"
 version = "0.1.0"
-description = "Brightspace API typed clients"
+description = "FastAPI backend for d2l-ai"
 requires-python = ">=3.12"
 dependencies = [
-  "httpx>=0.27,<1",
-  "pydantic>=2.7,<3",
+  "fastapi>=0.115.0,<1.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "opentelemetry-api>=1.27.0,<2.0.0",
+  "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0",
+  "opentelemetry-sdk>=1.27.0,<2.0.0",
+  "pydantic-settings>=2.4.0,<3.0.0",
+  "uvicorn[standard]>=0.30.0,<1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8.0,<9",
+  "black>=24.8.0,<25.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "mypy>=1.11.0,<2.0.0",
+  "pytest>=8.3.0,<9.0.0",
+  "ruff>=0.6.0,<1.0.0",
 ]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+plugins = []
+mypy_path = "."

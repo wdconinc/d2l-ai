@@ -1,0 +1,13 @@
+# Replace with your UM Entra tenant ID.
+tenant_id = "00000000-0000-0000-0000-000000000000"
+
+# Keep secrets out of git. Export TF_VAR_postgres_administrator_password
+# or load through your secret manager / CI.
+# postgres_administrator_password = "CHANGEME"
+
+# Replace these with real private-network IDs for private PostgreSQL access.
+postgres_delegated_subnet_id   = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/<snet>"
+postgres_private_dns_zone_id   = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.postgres.database.azure.com"
+
+# Pin to an explicit tag or digest (do not use :latest).
+container_image = "mcr.microsoft.com/k8se/quickstart:1.0"
