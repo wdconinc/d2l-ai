@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from hashlib import sha256
 
 from app.audit.log import AuditLogEntry, AuditLogWriter
@@ -58,7 +58,7 @@ class LLMGateway:
 
         prompt_hash = _hash_text(scrubbed_prompt)
         response_hash = _hash_text(provider_response.text)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         self._audit_log.write(
             AuditLogEntry(

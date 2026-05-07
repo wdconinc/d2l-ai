@@ -31,7 +31,11 @@ class AzureOpenAIAdapter:
     def generate(self, *, model: str, prompt: str, correlation_id: str) -> ProviderResponse:
         _ = correlation_id
         # Placeholder usage estimate until SDK integration returns provider token usage.
-        usage = TokenUsage(prompt_tokens=max(len(prompt.split()), 1), completion_tokens=5, total_tokens=0)
+        usage = TokenUsage(
+            prompt_tokens=max(len(prompt.split()), 1),
+            completion_tokens=5,
+            total_tokens=0,
+        )
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
         return ProviderResponse(text=f"[azure:{model}] {prompt}", usage=usage)
 
@@ -48,7 +52,11 @@ class BedrockAnthropicAdapter:
     def generate(self, *, model: str, prompt: str, correlation_id: str) -> ProviderResponse:
         _ = correlation_id
         # Placeholder usage estimate until SDK integration returns provider token usage.
-        usage = TokenUsage(prompt_tokens=max(len(prompt.split()), 1), completion_tokens=6, total_tokens=0)
+        usage = TokenUsage(
+            prompt_tokens=max(len(prompt.split()), 1),
+            completion_tokens=6,
+            total_tokens=0,
+        )
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
         return ProviderResponse(text=f"[bedrock:{model}] {prompt}", usage=usage)
 
@@ -74,6 +82,10 @@ class VLLMAdapter:
     def generate(self, *, model: str, prompt: str, correlation_id: str) -> ProviderResponse:
         _ = correlation_id
         # Placeholder usage estimate until SDK integration returns provider token usage.
-        usage = TokenUsage(prompt_tokens=max(len(prompt.split()), 1), completion_tokens=4, total_tokens=0)
+        usage = TokenUsage(
+            prompt_tokens=max(len(prompt.split()), 1),
+            completion_tokens=4,
+            total_tokens=0,
+        )
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
         return ProviderResponse(text=f"[vllm:{model}] {prompt}", usage=usage)

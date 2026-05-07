@@ -33,7 +33,14 @@ class SpyProvider:
 def test_gateway_routes_by_tenant_and_model() -> None:
     provider = SpyProvider()
     router = ProviderRouter(
-        rules=[RoutingRule(tenant_id="tenant-a", model="summary", provider_key="spy", provider_model="model-x")]
+        rules=[
+            RoutingRule(
+                tenant_id="tenant-a",
+                model="summary",
+                provider_key="spy",
+                provider_model="model-x",
+            )
+        ]
     )
     gateway = LLMGateway(
         providers={"spy": provider},
@@ -59,7 +66,14 @@ def test_gateway_routes_by_tenant_and_model() -> None:
 def test_gateway_scrubs_pii_before_provider_call() -> None:
     provider = SpyProvider()
     router = ProviderRouter(
-        rules=[RoutingRule(tenant_id="tenant-a", model="summary", provider_key="spy", provider_model="model-x")]
+        rules=[
+            RoutingRule(
+                tenant_id="tenant-a",
+                model="summary",
+                provider_key="spy",
+                provider_model="model-x",
+            )
+        ]
     )
     gateway = LLMGateway(
         providers={"spy": provider},
@@ -87,7 +101,14 @@ def test_gateway_scrubs_pii_before_provider_call() -> None:
 def test_gateway_does_not_scrub_unlabeled_long_numbers() -> None:
     provider = SpyProvider()
     router = ProviderRouter(
-        rules=[RoutingRule(tenant_id="tenant-a", model="summary", provider_key="spy", provider_model="model-x")]
+        rules=[
+            RoutingRule(
+                tenant_id="tenant-a",
+                model="summary",
+                provider_key="spy",
+                provider_model="model-x",
+            )
+        ]
     )
     gateway = LLMGateway(
         providers={"spy": provider},
@@ -113,7 +134,14 @@ def test_gateway_writes_audit_log_with_required_fields() -> None:
     provider = SpyProvider()
     audit_log = AuditLogWriter()
     router = ProviderRouter(
-        rules=[RoutingRule(tenant_id="tenant-b", model="rewrite", provider_key="spy", provider_model="model-y")]
+        rules=[
+            RoutingRule(
+                tenant_id="tenant-b",
+                model="rewrite",
+                provider_key="spy",
+                provider_model="model-y",
+            )
+        ]
     )
     gateway = LLMGateway(
         providers={"spy": provider},
