@@ -1,6 +1,6 @@
 __pycache__/
-.pytest_cache/
 *.py[cod]
+.pytest_cache/
 node_modules/
 playwright-report/
 test-results/
