@@ -10,7 +10,7 @@ from .usage_metering import HardBudgetCapExceeded, UsageMeter
 
 app = FastAPI(title="d2l-ai API")
 app.state.meter = UsageMeter()
-bearer_scheme = HTTPBearer(auto_error=False)
+http_bearer = HTTPBearer(auto_error=False)
 
 
 def get_meter() -> UsageMeter:
@@ -25,22 +25,22 @@ def _require_bearer_token(
     if not expected_token:
         raise HTTPException(
             status_code=503,
-            detail="Service temporarily unavailable.",
+            detail="errors.service.unavailable",
         )
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Bearer token authentication is required.")
+        raise HTTPException(status_code=401, detail="errors.auth.bearer_required")
     if credentials.credentials != expected_token:
-        raise HTTPException(status_code=403, detail="Invalid authentication token.")
+        raise HTTPException(status_code=403, detail="errors.auth.invalid_token")
 
 
 def require_admin_token(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
 ) -> None:
     _require_bearer_token("D2L_AI_ADMIN_API_TOKEN", credentials)
 
 
 def require_llm_call_token(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
 ) -> None:
     _require_bearer_token("D2L_AI_LLM_CALL_TOKEN", credentials)
 
@@ -101,7 +101,7 @@ def set_budget_caps(
             hard_limit_usd=payload.hard_limit_usd,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail="Invalid budget cap configuration.") from exc
+        raise HTTPException(status_code=400, detail="errors.budget.invalid_configuration") from exc
     return BudgetCapsResponse(
         tenant_id=tenant_id,
         soft_limit_usd=caps.soft_limit_usd,

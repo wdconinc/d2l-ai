@@ -66,7 +66,7 @@ def test_hard_cap_blocks_new_calls() -> None:
             output_tokens=1,
             estimated_cost_usd=0.02,
         )
-    assert str(exc_info.value) == HardBudgetCapExceeded.USER_MESSAGE
+    assert str(exc_info.value) == "errors.budget.hard_cap_reached"
 
 
 def test_concurrent_calls_accumulate_usage_safely() -> None:
