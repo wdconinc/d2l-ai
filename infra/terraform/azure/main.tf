@@ -1,7 +1,9 @@
 locals {
-  name_prefix = "${var.project}-${var.environment}"
+  name_prefix              = "${var.project}-${var.environment}"
+  key_vault_name_sanitized = replace(lower(local.name_prefix), "/[^0-9a-z]/", "")
+  # Key Vault name max is 24 chars; reserve 6 chars for random_string.kv_suffix.
   key_vault_name_prefix = substr(
-    replace(lower(local.name_prefix), "/[^0-9a-z]/", ""),
+    length(local.key_vault_name_sanitized) > 0 ? local.key_vault_name_sanitized : "kv",
     0,
     18,
   )
@@ -49,7 +51,7 @@ module "identities" {
 module "key_vault" {
   source = "./modules/key_vault"
 
-  name                          = "${length(local.key_vault_name_prefix) > 0 ? local.key_vault_name_prefix : "kv"}${random_string.kv_suffix.result}"
+  name                          = "${local.key_vault_name_prefix}${random_string.kv_suffix.result}"
   location                      = module.resource_group.location
   resource_group_name           = module.resource_group.name
   tenant_id                     = var.tenant_id
