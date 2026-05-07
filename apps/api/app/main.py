@@ -25,7 +25,7 @@ def _require_bearer_token(
     if not expected_token:
         raise HTTPException(
             status_code=503,
-            detail=f"Server misconfiguration: {secret_env_var} is not set.",
+            detail="Service temporarily unavailable.",
         )
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=401, detail="Bearer token authentication is required.")
@@ -101,7 +101,7 @@ def set_budget_caps(
             hard_limit_usd=payload.hard_limit_usd,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail="Invalid budget cap configuration.") from exc
     return BudgetCapsResponse(
         tenant_id=tenant_id,
         soft_limit_usd=caps.soft_limit_usd,
@@ -166,7 +166,7 @@ def record_llm_call(
             estimated_cost_usd=payload.estimated_cost_usd,
         )
     except HardBudgetCapExceeded as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise HTTPException(status_code=403, detail=exc.args[0]) from exc
 
     usage = meter.get_tenant_usage(tenant_id)
     return MeteredCallResponse(

@@ -38,6 +38,14 @@ class UsageDecision:
 class HardBudgetCapExceeded(Exception):
     """Raised when a tenant hard budget cap would be exceeded."""
 
+    USER_MESSAGE = (
+        "Budget limit reached for this tenant. Please contact your administrator "
+        "to increase the budget cap before making new AI requests."
+    )
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.USER_MESSAGE)
+
 
 class UsageMeter:
     def __init__(self) -> None:
@@ -101,10 +109,7 @@ class UsageMeter:
             projected_cost = tenant_usage.estimated_cost_usd + estimated_cost_usd
 
             if caps.hard_limit_usd is not None and projected_cost > caps.hard_limit_usd:
-                raise HardBudgetCapExceeded(
-                    "Budget limit reached for this tenant. Please contact your administrator "
-                    "to increase the budget cap before making new AI requests."
-                )
+                raise HardBudgetCapExceeded()
 
             tenant_usage.call_count += 1
             tenant_usage.input_tokens += input_tokens

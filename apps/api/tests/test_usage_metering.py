@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 from app.usage_metering import HardBudgetCapExceeded, UsageMeter
@@ -56,7 +58,7 @@ def test_hard_cap_blocks_new_calls() -> None:
         estimated_cost_usd=0.05,
     )
 
-    with pytest.raises(HardBudgetCapExceeded):
+    with pytest.raises(HardBudgetCapExceeded) as exc_info:
         meter.record_llm_call(
             tenant_id="tenant-1",
             workflow_id="u2_module_summary",
@@ -64,3 +66,27 @@ def test_hard_cap_blocks_new_calls() -> None:
             output_tokens=1,
             estimated_cost_usd=0.02,
         )
+    assert str(exc_info.value) == HardBudgetCapExceeded.USER_MESSAGE
+
+
+def test_concurrent_calls_accumulate_usage_safely() -> None:
+    meter = UsageMeter()
+
+    def record_one() -> None:
+        meter.record_llm_call(
+            tenant_id="tenant-1",
+            workflow_id="u2_module_summary",
+            input_tokens=2,
+            output_tokens=3,
+            estimated_cost_usd=0.01,
+        )
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        list(executor.map(lambda _: record_one(), range(50)))
+
+    usage = meter.get_tenant_usage("tenant-1")
+    assert usage.call_count == 50
+    assert usage.input_tokens == 100
+    assert usage.output_tokens == 150
+    assert usage.total_tokens == 250
+    assert usage.estimated_cost_usd == pytest.approx(0.5)
