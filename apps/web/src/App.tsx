@@ -6,6 +6,7 @@ import { t } from './i18n'
 import type { Locale } from './i18n'
 
 type Workflow = 'u2' | 'u3'
+type BloomLevel = 'remember' | 'understand' | 'apply' | 'analyze'
 
 type PreviewState = {
   title: string
@@ -22,6 +23,18 @@ type LaunchContext = {
 }
 
 const SENSITIVE_KEY_PATTERN = /(token|secret|nonce|jwt|signature|claim|id_token|access_token)/i
+const BLOOM_LABEL_KEYS = {
+  remember: 'bloomRemember',
+  understand: 'bloomUnderstand',
+  apply: 'bloomApply',
+  analyze: 'bloomAnalyze',
+} as const
+
+const countNonEmptyLines = (value: string): number =>
+  value
+    .split('\n')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0).length
 
 const sanitizeContext = (value: unknown): unknown => {
   if (Array.isArray(value)) {
@@ -74,7 +87,7 @@ function App() {
   const [u2ModuleTitle, setU2ModuleTitle] = useState('')
   const [u2Topics, setU2Topics] = useState('')
   const [u3Reading, setU3Reading] = useState('')
-  const [u3Bloom, setU3Bloom] = useState('understand')
+  const [u3Bloom, setU3Bloom] = useState<BloomLevel>('understand')
   const [u3Count, setU3Count] = useState(5)
   const [preview, setPreview] = useState<PreviewState | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -91,20 +104,10 @@ function App() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const bloomDisplay =
-      u3Bloom === 'remember'
-        ? t(locale, 'bloomRemember')
-        : u3Bloom === 'understand'
-          ? t(locale, 'bloomUnderstand')
-          : u3Bloom === 'apply'
-            ? t(locale, 'bloomApply')
-            : t(locale, 'bloomAnalyze')
+    const bloomDisplay = t(locale, BLOOM_LABEL_KEYS[u3Bloom])
 
     if (workflow === 'u2') {
-      const topicCount = u2Topics
-        .split('\n')
-        .map((entry) => entry.trim())
-        .filter((entry) => entry.length > 0).length
+      const topicCount = countNonEmptyLines(u2Topics)
 
       setPreview({
         title: t(locale, 'workflowU2Title'),
@@ -151,7 +154,7 @@ function App() {
 
       <section className="panel">
         <h2>{t(locale, 'workflowLabel')}</h2>
-        <div className="workflow-picker" role="tablist" aria-label={t(locale, 'workflowLabel')}>
+        <div className="workflow-picker">
           <button
             className={workflow === 'u2' ? 'active' : ''}
             type="button"
@@ -202,7 +205,7 @@ function App() {
               <select
                 id="u3-bloom"
                 value={u3Bloom}
-                onChange={(event) => setU3Bloom(event.target.value)}
+                onChange={(event) => setU3Bloom(event.target.value as BloomLevel)}
               >
                 <option value="remember">{t(locale, 'bloomRemember')}</option>
                 <option value="understand">{t(locale, 'bloomUnderstand')}</option>
