@@ -21,7 +21,16 @@ def get_deep_linking_config() -> DeepLinkingConfig:
     private_key_pem = os.getenv("D2L_AI_LTI_PRIVATE_KEY")
     key_id = os.getenv("D2L_AI_LTI_KEY_ID")
     if not issuer or not private_key_pem or not key_id:
-        raise RuntimeError("deep-linking signing configuration is missing")
+        missing = []
+        if not issuer:
+            missing.append("D2L_AI_LTI_ISSUER")
+        if not private_key_pem:
+            missing.append("D2L_AI_LTI_PRIVATE_KEY")
+        if not key_id:
+            missing.append("D2L_AI_LTI_KEY_ID")
+        raise RuntimeError(
+            f"deep-linking signing configuration is missing: {', '.join(missing)}"
+        )
     return DeepLinkingConfig(issuer=issuer, private_key_pem=private_key_pem, key_id=key_id)
 
 

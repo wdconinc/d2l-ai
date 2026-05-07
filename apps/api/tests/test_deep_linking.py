@@ -36,6 +36,13 @@ def keys() -> dict[str, str]:
     return {"private": private_pem, "public": public_pem}
 
 
+@pytest.fixture(autouse=True)
+def clear_deep_linking_config_cache() -> None:
+    get_deep_linking_config.cache_clear()
+    yield
+    get_deep_linking_config.cache_clear()
+
+
 @pytest.fixture()
 def launch_claims() -> dict[str, object]:
     return {
@@ -115,7 +122,6 @@ def test_endpoint_rejects_invalid_request(
     monkeypatch.setenv("D2L_AI_LTI_ISSUER", "urn:umanitoba:d2l-ai")
     monkeypatch.setenv("D2L_AI_LTI_PRIVATE_KEY", keys["private"])
     monkeypatch.setenv("D2L_AI_LTI_KEY_ID", "test-key")
-    get_deep_linking_config.cache_clear()
 
     client = TestClient(app)
     response = client.post(
