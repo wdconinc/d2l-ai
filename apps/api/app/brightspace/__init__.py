@@ -1,0 +1,1 @@
+"""Brightspace API client types."""
