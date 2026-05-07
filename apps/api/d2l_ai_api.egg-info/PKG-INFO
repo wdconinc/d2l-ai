@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: d2l-ai-api
+Version: 0.1.0
+Summary: API service for d2l-ai
+Requires-Python: >=3.12
+Requires-Dist: fastapi<1.0.0,>=0.115.0
+Requires-Dist: pydantic<3.0.0,>=2.8.0
+Requires-Dist: PyJWT[crypto]<3.0.0,>=2.9.0
+Provides-Extra: dev
+Requires-Dist: pytest<9.0.0,>=8.3.0; extra == "dev"
+Requires-Dist: httpx<1.0.0,>=0.28.0; extra == "dev"
