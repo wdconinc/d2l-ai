@@ -20,4 +20,7 @@ def configure_telemetry(app: FastAPI, settings: Settings) -> None:
         FastAPIInstrumentor.instrument_app(app)
         logger.info("OpenTelemetry FastAPI instrumentation enabled")
     except Exception:  # pragma: no cover - defensive startup logging
-        logger.exception("Failed to configure OpenTelemetry instrumentation")
+        logger.exception(
+            "Failed to configure OpenTelemetry instrumentation; "
+            "continuing startup without telemetry"
+        )
