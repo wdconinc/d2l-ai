@@ -1,0 +1,31 @@
+{
+  "case_id": "u3-001",
+  "prompt_id": "u3_quiz_generation",
+  "version": "v1.0.0",
+  "input": {
+    "reading_title": "Cell Structure",
+    "difficulty": "intro"
+  },
+  "expected_output": {
+    "items": [
+      {
+        "stem": "Which organelle is primarily responsible for ATP production?",
+        "options": ["Nucleus", "Mitochondrion", "Golgi apparatus", "Lysosome"],
+        "answer_index": 1,
+        "bloom_level": "Remember",
+        "rationale": "Mitochondria are the primary ATP-producing organelles."
+      }
+    ]
+  },
+  "fixture_output": {
+    "items": [
+      {
+        "stem": "Which organelle is primarily responsible for ATP production?",
+        "options": ["Nucleus", "Mitochondrion", "Golgi apparatus", "Lysosome"],
+        "answer_index": 1,
+        "bloom_level": "Remember",
+        "rationale": "Mitochondria are the primary ATP-producing organelles."
+      }
+    ]
+  }
+}
