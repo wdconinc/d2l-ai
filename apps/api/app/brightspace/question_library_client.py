@@ -5,11 +5,17 @@ from typing import Protocol
 
 
 @dataclass(frozen=True)
+class QuestionLibraryOption:
+    text: str
+    is_correct: bool
+
+
+@dataclass(frozen=True)
 class QuestionLibraryWriteRequest:
     org_unit_id: int
     question_text: str
     question_type: str
-    options: list[dict[str, str | bool]] | None = None
+    options: list[QuestionLibraryOption] | None = None
     answer_text: str | None = None
     feedback: str | None = None
 

@@ -8,6 +8,7 @@ from typing import Any, Callable
 
 from app.brightspace.question_library_client import (
     QuestionLibraryClient,
+    QuestionLibraryOption,
     QuestionLibraryWriteRequest,
 )
 
@@ -26,11 +27,17 @@ class QuizGenerationRequest:
 
 
 @dataclass(frozen=True)
+class QuestionOption:
+    text: str
+    is_correct: bool
+
+
+@dataclass(frozen=True)
 class QuestionItem:
     item_id: str
     question_type: str
     question_text: str
-    options: list[dict[str, str | bool]] | None = None
+    options: list[QuestionOption] | None = None
     answer_text: str | None = None
     feedback: str | None = None
 
@@ -95,7 +102,17 @@ class U3QuizGenerationWorkflow:
                         org_unit_id=org_unit_id,
                         question_text=question.question_text,
                         question_type=question.question_type,
-                        options=question.options,
+                        options=(
+                            [
+                                QuestionLibraryOption(
+                                    text=option.text,
+                                    is_correct=option.is_correct,
+                                )
+                                for option in question.options
+                            ]
+                            if question.options is not None
+                            else None
+                        ),
                         answer_text=question.answer_text,
                         feedback=question.feedback,
                     )
@@ -151,7 +168,10 @@ class U3QuizGenerationWorkflow:
         if question_type not in {"mcq", "short_answer"}:
             raise QuizSchemaError("question_type must be either 'mcq' or 'short_answer'.")
 
-        item_id = str(question.get("item_id", f"q{default_index}"))
+        item_id_raw = question.get("item_id", f"q{default_index}")
+        if not isinstance(item_id_raw, str) or not item_id_raw.strip():
+            raise QuizSchemaError("item_id must be a non-empty string when provided.")
+        item_id = item_id_raw
         question_text = question.get("question_text")
         feedback = question.get("feedback")
         if not isinstance(question_text, str) or not question_text.strip():
@@ -160,7 +180,7 @@ class U3QuizGenerationWorkflow:
             raise QuizSchemaError("feedback must be a string when provided.")
 
         allowed_fields = {"item_id", "question_type", "question_text", "feedback"}
-        options: list[dict[str, str | bool]] | None = None
+        options: list[QuestionOption] | None = None
         answer_text: str | None = None
 
         if question_type == "mcq":
@@ -168,7 +188,7 @@ class U3QuizGenerationWorkflow:
             options = question.get("options")
             if not isinstance(options, list) or len(options) < 2:
                 raise QuizSchemaError("MCQ items require at least 2 options.")
-            cleaned_options: list[dict[str, str | bool]] = []
+            validated_options: list[QuestionOption] = []
             correct_answers = 0
             for option in options:
                 if not isinstance(option, dict):
@@ -183,10 +203,12 @@ class U3QuizGenerationWorkflow:
                     raise QuizSchemaError("Option is_correct must be a boolean.")
                 if option["is_correct"]:
                     correct_answers += 1
-                cleaned_options.append({"text": option["text"], "is_correct": option["is_correct"]})
+                validated_options.append(
+                    QuestionOption(text=option["text"], is_correct=option["is_correct"])
+                )
             if correct_answers != 1:
                 raise QuizSchemaError("MCQ items must have exactly one correct answer.")
-            options = cleaned_options
+            options = validated_options
         else:
             allowed_fields.add("answer_text")
             answer_text_raw = question.get("answer_text")
