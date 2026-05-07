@@ -16,13 +16,13 @@ from app.main import app
 
 @pytest.fixture()
 def keypair() -> tuple[str, str]:
-    return _generate_random_keypair()
+    return _generate_rsa_keypair()
 
 
 @pytest.fixture()
 def client(monkeypatch: pytest.MonkeyPatch, keypair: tuple[str, str]) -> TestClient:
     _, platform_public_key = keypair
-    tool_private_key, tool_public_key = _generate_random_keypair()
+    tool_private_key, tool_public_key = _generate_rsa_keypair()
     monkeypatch.setenv("LTI_ISSUER", "https://sandbox.brightspace.com")
     monkeypatch.setenv("LTI_CLIENT_ID", "client-123")
     monkeypatch.setenv("LTI_DEPLOYMENT_ID", "deployment-abc")
@@ -144,12 +144,12 @@ def test_replayed_nonce_fails(client: TestClient, keypair: tuple[str, str]) -> N
 
     assert first.status_code == 200
     assert second.status_code == 401
-    assert second.json()["detail"] == "invalid_or_replayed_state"
+    assert second.json()["detail"] == "invalid_or_replayed_nonce"
 
 
 def test_invalid_signature_fails(client: TestClient, keypair: tuple[str, str]) -> None:
     state, nonce = _launch_params(client)
-    wrong_private_key, _ = _generate_random_keypair()
+    wrong_private_key, _ = _generate_rsa_keypair()
     wrong_token = _make_token(
         wrong_private_key,
         nonce,
@@ -162,7 +162,7 @@ def test_invalid_signature_fails(client: TestClient, keypair: tuple[str, str]) -
     assert response.json()["detail"] == "invalid_id_token"
 
 
-def _generate_random_keypair() -> tuple[str, str]:
+def _generate_rsa_keypair() -> tuple[str, str]:
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from secrets import token_urlsafe
 
 
@@ -23,7 +23,7 @@ class LTIStateNonceStore:
         nonce = token_urlsafe(32)
         self._states[state] = StateNonceRecord(
             nonce=nonce,
-            expires_at=datetime.now(timezone.utc) + timedelta(seconds=self.ttl_seconds),
+            expires_at=datetime.now(UTC) + timedelta(seconds=self.ttl_seconds),
         )
         return state, nonce
 
@@ -44,7 +44,7 @@ class LTIStateNonceStore:
         return state in self._states
 
     def _cleanup_expired(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expired_states = [state for state, record in self._states.items() if record.expires_at < now]
         for state in expired_states:
             self._states.pop(state, None)

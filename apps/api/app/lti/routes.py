@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit, urlunsplit
 from uuid import uuid4
 
 import jwt
@@ -43,6 +44,26 @@ def get_oidc_store() -> LTIStateNonceStore:
     return _oidc_store
 
 
+def _validate_login_hint(value: str, field_name: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9._:-]{1,512}", value):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid_{field_name}")
+    return value
+
+
+def _trusted_auth_login_url(settings: LTISettings) -> str:
+    auth_parts = urlsplit(settings.auth_login_url)
+    issuer_parts = urlsplit(settings.issuer)
+    if (
+        auth_parts.scheme != "https"
+        or not auth_parts.netloc
+        or auth_parts.netloc != issuer_parts.netloc
+        or auth_parts.query
+        or auth_parts.fragment
+    ):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_auth_login_url")
+    return urlunsplit((auth_parts.scheme, auth_parts.netloc, auth_parts.path, "", ""))
+
+
 @router.get("/jwks")
 def jwks(tool_conf: ToolConfDict = Depends(get_tool_conf)) -> dict[str, list[dict[str, Any]]]:
     settings = get_lti_settings()
@@ -72,6 +93,7 @@ def oidc_login(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_target_link_uri")
 
     state, nonce = oidc_store.issue()
+    safe_login_hint = _validate_login_hint(login_hint, "login_hint")
     query = {
         "scope": "openid",
         "response_type": "id_token",
@@ -79,14 +101,15 @@ def oidc_login(
         "prompt": "none",
         "client_id": settings.client_id,
         "redirect_uri": settings.launch_url,
-        "login_hint": login_hint,
+        "login_hint": safe_login_hint,
         "state": state,
         "nonce": nonce,
     }
     if lti_message_hint:
-        query["lti_message_hint"] = lti_message_hint
+        query["lti_message_hint"] = _validate_login_hint(lti_message_hint, "lti_message_hint")
 
-    return RedirectResponse(url=f"{settings.auth_login_url}?{urlencode(query)}")
+    trusted_auth_url = _trusted_auth_login_url(settings)
+    return RedirectResponse(url=f"{trusted_auth_url}?{urlencode(query)}")
 
 
 @router.post("/launch")
@@ -97,9 +120,6 @@ def launch(
     tool_conf: ToolConfDict = Depends(get_tool_conf),
     oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
 ) -> dict[str, Any]:
-    if not oidc_store.has_state(state):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_state")
-
     try:
         claims = jwt.decode(
             id_token,
@@ -119,7 +139,9 @@ def launch(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid_deployment")
 
     nonce = claims.get("nonce")
-    if not nonce or not oidc_store.consume(state, nonce):
+    if not nonce:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce")
+    if not oidc_store.consume(state, nonce):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_or_replayed_nonce")
 
     roles = claims.get("https://purl.imsglobal.org/spec/lti/claim/roles", [])
