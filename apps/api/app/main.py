@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-from .usage_metering import HardBudgetCapExceeded, UsageMeter
+from app.logging import configure_logging
+from app.settings import settings
+from app.telemetry import configure_telemetry
+from app.usage_metering import HardBudgetCapExceeded, UsageMeter
 
-app = FastAPI(title="d2l-ai API")
+configure_logging(settings.log_level)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    configure_telemetry(_app, settings)
+    yield
+
+
+app = FastAPI(title="d2l-ai API", version="0.1.0", lifespan=lifespan)
 app.state.meter = UsageMeter()
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -85,6 +99,16 @@ class MeteredCallResponse(BaseModel):
     tenant_id: str
     warning: str | None = None
     usage: TenantUsageResponse
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz() -> dict[str, str]:
+    return {"status": "ready"}
 
 
 @app.post("/admin/tenants/{tenant_id}/budget-caps")
