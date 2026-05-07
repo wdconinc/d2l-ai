@@ -1,7 +1,12 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const AxeBuilder = require('@axe-core/playwright').default;
-const { test, expect } = require('@playwright/test');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 test('web use-case picker and preview fixture has no critical/serious axe violations', async ({ page }) => {
   const fixturePath = path.resolve(__dirname, '../fixtures/use-case-preview.html');
@@ -9,9 +14,7 @@ test('web use-case picker and preview fixture has no critical/serious axe violat
 
   await page.setContent(html);
 
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa'])
-    .analyze();
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 
   const blockingViolations = results.violations.filter((violation) =>
     ['critical', 'serious'].includes(violation.impact),

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Accessibility test tooling for d2l-ai web/admin scaffolds",
   "scripts": {
-    "test:a11y": "playwright test apps/web/tests/a11y.spec.js apps/admin/tests/a11y.spec.js --project=chromium"
+    "test:a11y": "playwright test apps/web/tests/a11y.spec.mjs apps/admin/tests/a11y.spec.mjs --project=chromium"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
