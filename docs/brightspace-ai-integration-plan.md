@@ -1,9 +1,9 @@
 # UManitoba Brightspace (D2L) AI Integration — Development Plan
 
-**Owner:** UManitoba (LMS / Centre for Advancement of Teaching & Learning)  
-**Target platform:** D2L Brightspace (SaaS, Canadian data centre)  
-**Primary users:** Instructors and Course Developers / Instructional Designers  
-**Status:** Draft v0.1 — ready for agent-driven scaffolding  
+**Owner:** UManitoba (LMS / Centre for Advancement of Teaching & Learning)
+**Target platform:** D2L Brightspace (SaaS, Canadian data centre)
+**Primary users:** Instructors and Course Developers / Instructional Designers
+**Status:** Draft v0.1 — ready for agent-driven scaffolding
 **Repository:** https://github.com/wdconinc/d2l-ai
 
 ---
