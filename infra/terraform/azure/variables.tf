@@ -98,9 +98,17 @@ variable "postgres_zone" {
 }
 
 variable "postgres_high_availability_mode" {
-  description = "PostgreSQL HA mode (ZoneRedundant or SameZone)."
+  description = "PostgreSQL HA mode (Disabled, ZoneRedundant, or SameZone)."
   type        = string
   default     = "ZoneRedundant"
+
+  validation {
+    condition = contains(
+      ["Disabled", "ZoneRedundant", "SameZone"],
+      var.postgres_high_availability_mode
+    )
+    error_message = "postgres_high_availability_mode must be one of: Disabled, ZoneRedundant, SameZone."
+  }
 }
 
 variable "postgres_high_availability_standby_zone" {
@@ -152,9 +160,14 @@ variable "key_vault_purge_protection_enabled" {
 }
 
 variable "container_image" {
-  description = "Placeholder image for Container App skeleton."
+  description = "Container image for Container App (pin to a specific tag or digest)."
   type        = string
-  default     = "mcr.microsoft.com/k8se/quickstart:latest"
+}
+
+variable "container_external_enabled" {
+  description = "Expose Container App ingress externally."
+  type        = bool
+  default     = false
 }
 
 variable "container_target_port" {

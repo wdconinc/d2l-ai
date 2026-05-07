@@ -74,6 +74,14 @@ variable "high_availability_mode" {
   description = "HA mode."
   type        = string
   default     = "ZoneRedundant"
+
+  validation {
+    condition = contains(
+      ["Disabled", "ZoneRedundant", "SameZone"],
+      var.high_availability_mode
+    )
+    error_message = "high_availability_mode must be one of: Disabled, ZoneRedundant, SameZone."
+  }
 }
 
 variable "high_availability_standby_zone" {

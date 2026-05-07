@@ -14,9 +14,12 @@ resource "azurerm_postgresql_flexible_server" "this" {
   public_network_access_enabled = var.public_network_access_enabled
   backup_retention_days         = var.backup_retention_days
 
-  high_availability {
-    mode                      = var.high_availability_mode
-    standby_availability_zone = var.high_availability_standby_zone
+  dynamic "high_availability" {
+    for_each = var.high_availability_mode == "Disabled" ? [] : [1]
+    content {
+      mode                      = var.high_availability_mode
+      standby_availability_zone = var.high_availability_standby_zone
+    }
   }
 
   tags = var.tags

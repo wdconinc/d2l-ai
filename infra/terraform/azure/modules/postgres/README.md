@@ -1,6 +1,7 @@
 # postgres module
 
 Creates Azure PostgreSQL Flexible Server.
+High availability can be disabled by setting `high_availability_mode = "Disabled"`.
 
 ## pgvector path
 

@@ -33,6 +33,12 @@ variable "target_port" {
   type        = number
 }
 
+variable "external_enabled" {
+  description = "Expose ingress externally."
+  type        = bool
+  default     = false
+}
+
 variable "cpu" {
   description = "Container CPU allocation."
   type        = number

@@ -3,13 +3,13 @@ name: terraform-azure-ci
 on:
   pull_request:
     paths:
-      - 'infra/terraform/**'
+      - 'infra/terraform/azure/**'
       - '.github/workflows/terraform-azure-ci.yml'
   push:
     branches:
       - main
     paths:
-      - 'infra/terraform/**'
+      - 'infra/terraform/azure/**'
       - '.github/workflows/terraform-azure-ci.yml'
 
 jobs:

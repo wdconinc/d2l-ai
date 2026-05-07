@@ -1,5 +1,10 @@
 locals {
   name_prefix = "${var.project}-${var.environment}"
+  key_vault_name_prefix = substr(
+    replace(lower(local.name_prefix), "/[^0-9a-z]/", ""),
+    0,
+    18,
+  )
 
   tags = merge(
     {
@@ -44,7 +49,7 @@ module "identities" {
 module "key_vault" {
   source = "./modules/key_vault"
 
-  name                          = "${replace(local.name_prefix, "-", "")}${random_string.kv_suffix.result}"
+  name                          = "${length(local.key_vault_name_prefix) > 0 ? local.key_vault_name_prefix : "kv"}${random_string.kv_suffix.result}"
   location                      = module.resource_group.location
   resource_group_name           = module.resource_group.name
   tenant_id                     = var.tenant_id
@@ -100,6 +105,7 @@ module "container_apps" {
   log_analytics_workspace_id = module.log_analytics.id
   container_image            = var.container_image
   target_port                = var.container_target_port
+  external_enabled           = var.container_external_enabled
   cpu                        = var.container_cpu
   memory                     = var.container_memory
   tags                       = local.tags
