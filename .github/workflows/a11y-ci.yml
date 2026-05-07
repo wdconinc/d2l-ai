@@ -1,0 +1,41 @@
+name: Accessibility CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - '.github/workflows/a11y-ci.yml'
+      - 'playwright.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'docs/accessibility-wcag-2.1-aa.md'
+      - 'README.md'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  axe-core:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run accessibility checks
+        run: npm run test:a11y
