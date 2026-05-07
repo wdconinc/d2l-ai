@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from threading import Lock
 
@@ -69,11 +70,16 @@ class UsageMeter:
 
     def get_budget_caps(self, tenant_id: str) -> BudgetCaps:
         with self._lock:
-            return self._budgets.get(tenant_id, BudgetCaps())
+            caps = self._budgets.get(tenant_id, BudgetCaps())
+            return BudgetCaps(
+                soft_limit_usd=caps.soft_limit_usd,
+                hard_limit_usd=caps.hard_limit_usd,
+            )
 
     def get_tenant_usage(self, tenant_id: str) -> TenantUsage:
         with self._lock:
-            return self._usage.get(tenant_id, TenantUsage())
+            usage = self._usage.get(tenant_id, TenantUsage())
+            return deepcopy(usage)
 
     def record_llm_call(
         self,

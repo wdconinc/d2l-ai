@@ -166,7 +166,7 @@ def record_llm_call(
             estimated_cost_usd=payload.estimated_cost_usd,
         )
     except HardBudgetCapExceeded as exc:
-        raise HTTPException(status_code=429, detail=str(exc)) from exc
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
     usage = meter.get_tenant_usage(tenant_id)
     return MeteredCallResponse(
