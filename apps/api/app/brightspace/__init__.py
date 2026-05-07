@@ -1,3 +1,5 @@
+"""Brightspace API package."""
+
 from app.brightspace.clients import (
     BrightspaceApiClient,
     BrightspaceApiConfig,
