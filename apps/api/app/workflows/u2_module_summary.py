@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from html import escape
 from html import unescape
@@ -74,7 +74,7 @@ async def generate_u2_module_summary(
     draft = await llm_gateway.summarize_module(scrubbed_prompt)
 
     prompt_hash = sha256(scrubbed_prompt.encode("utf-8")).hexdigest()
-    generated_at = datetime.now(UTC).isoformat()
+    generated_at = datetime.now(timezone.utc).isoformat()
     provenance = WorkflowProvenance(
         model=draft.model,
         prompt_hash=prompt_hash,
@@ -194,7 +194,12 @@ def _build_deep_linking_payload(
         f"prompt-hash={safe_prompt_hash} -->"
     )
     # Prevent accidental script-tag termination if metadata ever contains '</script>'.
-    metadata_json = json.dumps(metadata, ensure_ascii=True).replace("</", "<\\/")
+    metadata_json = (
+        json.dumps(metadata, ensure_ascii=True)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
     html = (
         f"{provenance_comment}\n"
         "<article>\n"
