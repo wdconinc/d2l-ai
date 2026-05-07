@@ -1,8 +1,10 @@
 locals {
   name_prefix              = "${var.project}-${var.environment}"
   key_vault_name_sanitized = join("", regexall("[0-9a-z]", lower(local.name_prefix)))
-  # Key Vault name max is 24 chars; reserve 6 chars for random_string.kv_suffix.
-  key_vault_prefix_max_length = 18
+  key_vault_suffix_length  = 6
+  # Key Vault name max is 24 chars; reserve local.key_vault_suffix_length for random suffix.
+  key_vault_prefix_max_length = 24 - local.key_vault_suffix_length
+  # Fallback keeps the generated Key Vault name valid if sanitization strips all characters.
   key_vault_name_prefix = substr(
     local.key_vault_name_sanitized != "" ? local.key_vault_name_sanitized : "kv",
     0,
@@ -115,7 +117,7 @@ module "container_apps" {
 }
 
 resource "random_string" "kv_suffix" {
-  length  = 6
+  length  = local.key_vault_suffix_length
   special = false
   upper   = false
 }

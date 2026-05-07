@@ -160,7 +160,7 @@ variable "key_vault_purge_protection_enabled" {
 }
 
 variable "container_image" {
-  description = "Container image for Container App (pin to a specific tag or digest)."
+  description = "Container image for Container App (pin to a specific tag or digest for reproducibility and security)."
   type        = string
   default     = "mcr.microsoft.com/k8se/quickstart:1.0"
 }
