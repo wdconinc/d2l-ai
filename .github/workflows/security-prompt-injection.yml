@@ -1,0 +1,26 @@
+name: Security Prompt Injection Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  security-prompt-injection:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run prompt-injection security suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m unittest discover -s tests/security -p "test_*.py" -v
