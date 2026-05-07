@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from time import sleep as default_sleep
 import time
+from time import sleep as default_sleep
 from urllib.parse import urlencode
 
 import httpx
@@ -45,6 +45,9 @@ class _TokenBundle:
     access_token: str
     refresh_token: str
     expires_at: float
+
+
+TOKEN_EXPIRY_BUFFER_SECONDS = 30
 
 
 class BrightspaceOAuthClient:
@@ -101,7 +104,7 @@ class BrightspaceOAuthClient:
         return _TokenBundle(
             access_token=body["access_token"],
             refresh_token=refresh_token,
-            expires_at=time.time() + max(expires_in - 30, 0),
+            expires_at=time.time() + max(expires_in - TOKEN_EXPIRY_BUFFER_SECONDS, 0),
         )
 
     def _store_token_bundle(self, token_owner: str, token_bundle: _TokenBundle) -> None:
