@@ -52,6 +52,12 @@ class QuizPreview:
 
 
 class U3QuizGenerationWorkflow:
+    QUESTION_TYPE_ALIASES = {
+        "multiple_choice": "mcq",
+        "multiple-choice": "mcq",
+        "short-answer": "short_answer",
+    }
+
     def __init__(
         self,
         *,
@@ -78,8 +84,9 @@ class U3QuizGenerationWorkflow:
         generated_at = datetime.now(UTC).isoformat()
         raw_response = self._llm_generate(scrubbed_payload)
         questions = self._parse_questions(raw_response)
+        prompt_hash_source = {"version": self._prompt_version, "payload": scrubbed_payload}
         prompt_hash = hashlib.sha256(
-            json.dumps(scrubbed_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            json.dumps(prompt_hash_source, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
         return QuizPreview(
             questions=questions,
@@ -158,20 +165,14 @@ class U3QuizGenerationWorkflow:
         if not isinstance(question, dict):
             raise QuizSchemaError("Each generated question must be a JSON object.")
 
-        question_type_aliases = {
-            "multiple_choice": "mcq",
-            "multiple-choice": "mcq",
-            "short-answer": "short_answer",
-        }
         question_type_raw = question.get("question_type")
-        question_type = question_type_aliases.get(question_type_raw, question_type_raw)
+        question_type = self.QUESTION_TYPE_ALIASES.get(question_type_raw, question_type_raw)
         if question_type not in {"mcq", "short_answer"}:
             raise QuizSchemaError("question_type must be either 'mcq' or 'short_answer'.")
 
-        item_id_raw = question.get("item_id", f"q{default_index}")
-        if not isinstance(item_id_raw, str) or not item_id_raw.strip():
+        item_id = question.get("item_id", f"q{default_index}")
+        if not isinstance(item_id, str) or not item_id.strip():
             raise QuizSchemaError("item_id must be a non-empty string when provided.")
-        item_id = item_id_raw
         question_text = question.get("question_text")
         feedback = question.get("feedback")
         if not isinstance(question_text, str) or not question_text.strip():
