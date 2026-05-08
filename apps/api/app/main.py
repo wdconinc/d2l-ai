@@ -301,14 +301,14 @@ def create_app(client: BrightspaceOAuthClient | None = None) -> FastAPI:
         return app
 
     @app.get("/brightspace/oauth/authorize-url")
-    def get_authorize_url(state: str = Query(min_length=1)) -> dict[str, str]:
+    def get_authorize_url(state: str = Query(min_length=1, max_length=512)) -> dict[str, str]:
         return {"authorization_url": brightspace_client.build_authorization_url(state)}
 
     @app.get("/brightspace/oauth/callback")
     def oauth_callback(
-        code: str = Query(min_length=1),
-        state: str = Query(min_length=1),
-        token_owner: str = Query(default="service"),
+        code: str = Query(min_length=1, max_length=2048),
+        state: str = Query(min_length=1, max_length=512),
+        token_owner: str = Query(default="service", max_length=64),
     ) -> dict[str, str]:
         brightspace_client.exchange_code_for_tokens(code=code, token_owner=token_owner)
         return {"status": "ok", "state": state}

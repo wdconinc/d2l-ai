@@ -158,6 +158,7 @@ function App() {
           <button
             className={workflow === 'u2' ? 'active' : ''}
             type="button"
+            aria-pressed={workflow === 'u2'}
             onClick={() => setWorkflow('u2')}
           >
             {t(locale, 'workflowU2Title')}
@@ -165,6 +166,7 @@ function App() {
           <button
             className={workflow === 'u3' ? 'active' : ''}
             type="button"
+            aria-pressed={workflow === 'u3'}
             onClick={() => setWorkflow('u3')}
           >
             {t(locale, 'workflowU3Title')}
@@ -182,12 +184,14 @@ function App() {
               <input
                 id="u2-title"
                 value={u2ModuleTitle}
+                maxLength={200}
                 onChange={(event) => setU2ModuleTitle(event.target.value)}
               />
               <label htmlFor="u2-topics">{t(locale, 'u2TopicsLabel')}</label>
               <textarea
                 id="u2-topics"
                 rows={5}
+                maxLength={5000}
                 value={u2Topics}
                 onChange={(event) => setU2Topics(event.target.value)}
               />
@@ -198,6 +202,7 @@ function App() {
               <textarea
                 id="u3-reading"
                 rows={5}
+                maxLength={5000}
                 value={u3Reading}
                 onChange={(event) => setU3Reading(event.target.value)}
               />
