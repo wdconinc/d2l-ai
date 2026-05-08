@@ -90,20 +90,20 @@ def jwks(
     if not isinstance(raw_jwks_payload, dict):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="invalid_jwks_payload_type",
+            detail="jwks_payload_unexpected_type",
         )
     keys = raw_jwks_payload.get("keys")
     if not isinstance(keys, list):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="invalid_jwks_keys_type",
+            detail="jwks_keys_unexpected_type",
         )
     jwks_payload: dict[str, list[dict[str, Any]]] = {"keys": []}
     for key in keys:
         if not isinstance(key, dict):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="invalid_jwks_key_entry_type",
+                detail="jwks_key_entry_unexpected_type",
             )
         typed_key = {**key, "kid": settings.key_id}
         jwks_payload["keys"].append(typed_key)
