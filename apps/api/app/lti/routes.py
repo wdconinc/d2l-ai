@@ -100,8 +100,7 @@ def jwks(
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
             )
-        typed_key = dict(key)
-        typed_key["kid"] = settings.key_id
+        typed_key = {**key, "kid": settings.key_id}
         jwks_payload["keys"].append(typed_key)
     return jwks_payload
 
