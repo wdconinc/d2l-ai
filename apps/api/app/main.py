@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.logging import configure_logging
+from app.lti.routes import router as lti_router
 from app.settings import settings
 from app.telemetry import configure_telemetry
 
@@ -17,6 +18,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="d2l-ai API", version="0.1.0", lifespan=lifespan)
+app.include_router(lti_router)
 
 
 @app.get("/healthz")
