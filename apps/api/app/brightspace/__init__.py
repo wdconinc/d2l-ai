@@ -1,4 +1,4 @@
-"""Brightspace API package."""
+"""Brightspace integration clients and OAuth support."""
 
 from app.brightspace.clients import (
     BrightspaceApiClient,
@@ -16,6 +16,8 @@ from app.brightspace.models import (
     Quiz,
     Rubric,
 )
+from app.brightspace.oauth_client import BrightspaceOAuthClient, BrightspaceOAuthConfig
+from app.brightspace.token_store import EncryptedRefreshTokenStore
 
 __all__ = [
     "BrightspaceApiClient",
@@ -30,4 +32,7 @@ __all__ = [
     "QuestionLibraryQuestion",
     "Rubric",
     "CreatedArtifact",
+    "BrightspaceOAuthClient",
+    "BrightspaceOAuthConfig",
+    "EncryptedRefreshTokenStore",
 ]
