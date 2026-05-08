@@ -7,13 +7,14 @@ from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
 
+from app.logging import configure_logging
 from app.lti.deep_linking import (
     DeepLinkingConfig,
     DeepLinkingRequestError,
     DeepLinkingResponseBuilder,
     DeepLinkingResponseRequest,
 )
-from app.logging import configure_logging
+from app.lti.routes import router as lti_router
 from app.settings import settings
 from app.telemetry import configure_telemetry
 
@@ -27,6 +28,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="d2l-ai API", version="0.1.0", lifespan=lifespan)
+app.include_router(lti_router)
 
 
 @lru_cache(maxsize=1)
@@ -42,9 +44,7 @@ def get_deep_linking_config() -> DeepLinkingConfig:
             missing.append("D2L_AI_LTI_PRIVATE_KEY")
         if not key_id:
             missing.append("D2L_AI_LTI_KEY_ID")
-        raise RuntimeError(
-            f"deep-linking signing configuration is missing: {', '.join(missing)}"
-        )
+        raise RuntimeError(f"deep-linking signing configuration is missing: {', '.join(missing)}")
     return DeepLinkingConfig(issuer=issuer, private_key_pem=private_key_pem, key_id=key_id)
 
 

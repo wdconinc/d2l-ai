@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
@@ -21,7 +21,7 @@ class DeepLinkingRequestError(ValueError):
     """Raised when an incoming launch payload is not a valid deep-linking request."""
 
 
-class ContentItemType(str, Enum):
+class ContentItemType(StrEnum):
     HTML = "html"
     LINK = "link"
 
@@ -42,7 +42,7 @@ class ContentSelection(BaseModel):
     provenance: Provenance = Field(default_factory=Provenance)
 
     @model_validator(mode="after")
-    def validate_payload(self) -> "ContentSelection":
+    def validate_payload(self) -> ContentSelection:
         if self.item_type == ContentItemType.HTML and not self.html:
             raise ValueError("html payload is required for html content items")
         if self.item_type == ContentItemType.LINK and not self.url:

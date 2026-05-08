@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -29,15 +31,19 @@ def keys() -> dict[str, str]:
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     ).decode()
-    public_pem = private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode()
+    public_pem = (
+        private_key.public_key()
+        .public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        .decode()
+    )
     return {"private": private_pem, "public": public_pem}
 
 
 @pytest.fixture(autouse=True)
-def clear_deep_linking_config_cache() -> None:
+def clear_deep_linking_config_cache() -> Generator[None, None, None]:
     get_deep_linking_config.cache_clear()
     yield
     get_deep_linking_config.cache_clear()
@@ -112,6 +118,7 @@ def test_invalid_deep_linking_launch_rejected() -> None:
 def test_static_html_topic_sample_contains_provenance_comment() -> None:
     selection = build_static_html_topic_selection()
 
+    assert selection.html is not None
     assert "generated-by: UM-AI-Tool" in selection.html
     assert selection.provenance.model == "pending"
 

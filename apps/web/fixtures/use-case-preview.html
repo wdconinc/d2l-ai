@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Use-case picker and preview</title>
+  </head>
+  <body>
+    <header>
+      <h1>UM AI Assistant</h1>
+      <p>Pick a use case and preview a draft before confirming.</p>
+    </header>
+
+    <main>
+      <form aria-label="Workflow picker">
+        <label for="use-case">Use case</label>
+        <select id="use-case" name="useCase">
+          <option value="u2">Module summary</option>
+          <option value="u3">Quiz generation</option>
+          <option value="u4">Rubric generation</option>
+        </select>
+
+        <button type="button" id="preview-button">Generate preview</button>
+      </form>
+
+      <section aria-labelledby="preview-title" aria-live="polite">
+        <h2 id="preview-title">Preview</h2>
+        <p>This area shows draft output only. Instructors confirm before publish.</p>
+      </section>
+    </main>
+  </body>
+</html>
