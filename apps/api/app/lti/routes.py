@@ -43,7 +43,9 @@ def _extract_org_unit_id(claims: dict[str, Any]) -> str | None:
     org_unit_id = custom.get("org_unit_id") or context.get("id")
     if org_unit_id is None:
         return None
-    return str(org_unit_id)
+    if isinstance(org_unit_id, (str, int)):
+        return str(org_unit_id)
+    return None
 
 
 @lru_cache(maxsize=1)
@@ -87,18 +89,21 @@ def jwks(
     raw_jwks_payload = tool_conf.get_jwks(settings.issuer, settings.client_id)
     if not isinstance(raw_jwks_payload, dict):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="invalid_jwks_payload_type",
         )
     keys = raw_jwks_payload.get("keys")
     if not isinstance(keys, list):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="invalid_jwks_keys_type",
         )
     jwks_payload: dict[str, list[dict[str, Any]]] = {"keys": []}
     for key in keys:
         if not isinstance(key, dict):
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="invalid_jwks_key_entry_type",
             )
         typed_key = {**key, "kid": settings.key_id}
         jwks_payload["keys"].append(typed_key)
