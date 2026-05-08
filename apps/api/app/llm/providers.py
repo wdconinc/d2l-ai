@@ -23,7 +23,8 @@ class AzureOpenAIAdapter:
     provider_name = "azure_openai"
 
     def __init__(self, endpoint: str = "https://canadacentral.api.cognitive.microsoft.com") -> None:
-        if "canadacentral" not in endpoint.lower():
+        hostname = (urlparse(endpoint).hostname or "").lower()
+        if "canadacentral" not in hostname:
             msg = "Azure OpenAI endpoint must be in Canada Central."
             raise ValueError(msg)
         self.endpoint = endpoint

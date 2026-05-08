@@ -38,6 +38,11 @@ variable "administrator_password" {
   description = "Administrator password."
   type        = string
   sensitive   = true
+
+  validation {
+    condition     = length(var.administrator_password) >= 8
+    error_message = "PostgreSQL administrator password must be at least 8 characters."
+  }
 }
 
 variable "zone" {

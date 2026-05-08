@@ -173,6 +173,11 @@ def test_azure_adapter_rejects_non_canadian_endpoint() -> None:
         AzureOpenAIAdapter(endpoint="https://eastus.api.cognitive.microsoft.com")
 
 
+def test_azure_adapter_rejects_endpoint_with_canadacentral_only_in_path() -> None:
+    with pytest.raises(ValueError):
+        AzureOpenAIAdapter(endpoint="https://eastus.api.cognitive.microsoft.com/canadacentral/v1")
+
+
 def test_bedrock_adapter_rejects_non_canadian_region() -> None:
     with pytest.raises(ValueError):
         BedrockAnthropicAdapter(region="us-east-1")

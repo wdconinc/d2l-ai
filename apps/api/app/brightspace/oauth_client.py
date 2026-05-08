@@ -157,7 +157,10 @@ class BrightspaceOAuthClient:
             and value.status_code in {429, 503},
             sleep=self._sleep,
         )
-        assert isinstance(response, httpx.Response)
+        if not isinstance(response, httpx.Response):  # pragma: no cover
+            raise TypeError(
+                f"Expected httpx.Response from retry helper, got {type(response).__name__}"
+            )
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
