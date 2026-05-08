@@ -83,7 +83,7 @@ def create_app(client: BrightspaceOAuthClient | None = None) -> FastAPI:
     def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.post("/lti/deep-linking/response")
+    @app.post("/api/lti/deep-linking/response")
     def build_deep_linking_response(request: DeepLinkingResponseRequest) -> dict[str, str]:
         try:
             builder = DeepLinkingResponseBuilder(get_deep_linking_config())

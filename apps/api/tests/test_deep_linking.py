@@ -132,7 +132,7 @@ def test_endpoint_rejects_invalid_request(
 
     client = TestClient(app)
     response = client.post(
-        "/lti/deep-linking/response",
+        "/api/lti/deep-linking/response",
         json={
             "launch_claims": {
                 "iss": "https://brightspace.example",

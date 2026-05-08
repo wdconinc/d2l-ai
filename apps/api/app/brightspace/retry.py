@@ -20,9 +20,10 @@ def retry_with_exponential_backoff[
     if max_attempts < 1:
         raise ValueError(f"max_attempts must be at least 1, got {max_attempts}")
 
-    for attempt in range(max_attempts):
+    attempt = 0
+    while True:
         result = operation()
-        if not should_retry(result) or attempt == max_attempts - 1:
+        if not should_retry(result) or attempt >= max_attempts - 1:
             return result
         sleep(base_delay_seconds * (2**attempt))
-    raise RuntimeError("retry loop exhausted unexpectedly")
+        attempt += 1
