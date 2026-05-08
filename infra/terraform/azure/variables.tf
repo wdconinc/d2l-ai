@@ -51,8 +51,11 @@ variable "postgres_administrator_password" {
   sensitive   = true
 
   validation {
+    # Azure Flexible Server requires >= 8 chars AND at least 3 of: uppercase,
+    # lowercase, digits, non-alphanumeric. This check catches obviously short
+    # passwords; the full complexity requirement is enforced by Azure at apply time.
     condition     = length(var.postgres_administrator_password) >= 8
-    error_message = "PostgreSQL administrator password must be at least 8 characters."
+    error_message = "PostgreSQL administrator password must be at least 8 characters (Azure also requires character complexity — see Azure Flexible Server documentation)."
   }
 }
 
