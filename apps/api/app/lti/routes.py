@@ -4,14 +4,14 @@ import logging
 import re
 from functools import lru_cache
 from html import escape
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, status
 from fastapi.responses import HTMLResponse
-from pylti1p3.tool_config import ToolConfDict
+from pylti1p3.tool_config import ToolConfDict  # type: ignore[attr-defined]
 
 from app.lti.config import LTISettings, get_lti_settings, get_tool_conf
 from app.lti.state import LTIStateNonceStore
@@ -36,9 +36,18 @@ def _is_instructor(roles: list[str]) -> bool:
 
 
 def _extract_org_unit_id(claims: dict[str, Any]) -> str | None:
-    context = claims.get("https://purl.imsglobal.org/spec/lti/claim/context", {})
-    custom = claims.get("https://purl.imsglobal.org/spec/lti/claim/custom", {})
-    return custom.get("org_unit_id") or context.get("id")
+    context = cast(
+        dict[str, Any],
+        claims.get("https://purl.imsglobal.org/spec/lti/claim/context", {}),
+    )
+    custom = cast(
+        dict[str, Any],
+        claims.get("https://purl.imsglobal.org/spec/lti/claim/custom", {}),
+    )
+    org_unit_id = custom.get("org_unit_id") or context.get("id")
+    if org_unit_id is None:
+        return None
+    return str(org_unit_id)
 
 
 @lru_cache(maxsize=1)
@@ -46,7 +55,9 @@ def _build_oidc_store(ttl_seconds: int, state_db_path: str) -> LTIStateNonceStor
     return LTIStateNonceStore(ttl_seconds=ttl_seconds, database_path=state_db_path)
 
 
-def get_oidc_store(settings: LTISettings = Depends(get_lti_settings)) -> LTIStateNonceStore:
+def get_oidc_store(
+    settings: LTISettings = Depends(get_lti_settings),  # noqa: B008
+) -> LTIStateNonceStore:
     return _build_oidc_store(settings.state_ttl_seconds, settings.state_db_path)
 
 
@@ -73,12 +84,14 @@ def _trusted_auth_login_url(settings: LTISettings) -> str:
 
 
 @router.get("/jwks")
-def jwks(tool_conf: ToolConfDict = Depends(get_tool_conf)) -> dict[str, list[dict[str, Any]]]:
+def jwks(
+    tool_conf: ToolConfDict = Depends(get_tool_conf),  # noqa: B008
+) -> dict[str, list[dict[str, Any]]]:
     settings = get_lti_settings()
     jwks_payload = tool_conf.get_jwks(settings.issuer, settings.client_id)
     for key in jwks_payload.get("keys", []):
         key["kid"] = settings.key_id
-    return jwks_payload
+    return cast(dict[str, list[dict[str, Any]]], jwks_payload)
 
 
 @router.get("/login")
@@ -88,8 +101,8 @@ def oidc_login(
     target_link_uri: str,
     lti_message_hint: str | None = None,
     client_id: str | None = None,
-    settings: LTISettings = Depends(get_lti_settings),
-    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
+    settings: LTISettings = Depends(get_lti_settings),  # noqa: B008
+    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),  # noqa: B008
 ) -> HTMLResponse:
     if iss != settings.issuer:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_issuer")
@@ -135,9 +148,9 @@ def oidc_login(
 def launch(
     state: str = Form(...),
     id_token: str = Form(...),
-    settings: LTISettings = Depends(get_lti_settings),
-    tool_conf: ToolConfDict = Depends(get_tool_conf),
-    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),
+    settings: LTISettings = Depends(get_lti_settings),  # noqa: B008
+    tool_conf: ToolConfDict = Depends(get_tool_conf),  # noqa: B008
+    oidc_store: LTIStateNonceStore = Depends(get_oidc_store),  # noqa: B008
 ) -> dict[str, Any]:
     try:
         claims = jwt.decode(

@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 
-from pylti1p3.tool_config import ToolConfDict
+from pylti1p3.tool_config import ToolConfDict  # type: ignore[attr-defined]
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,8 @@ def get_lti_settings() -> LTISettings:
         or not launch_url
     ):
         raise RuntimeError(
-            "LTI issuer/client/deployment/login/token/launch URLs must be configured via environment variables."
+            "LTI issuer/client/deployment/login/token/launch URLs must be configured via "
+            "environment variables."
         )
     if not state_db_path:
         raise RuntimeError("LTI_STATE_DB_PATH must be configured.")
