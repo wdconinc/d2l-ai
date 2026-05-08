@@ -4,7 +4,7 @@ import logging
 import re
 from functools import lru_cache
 from html import escape
-from typing import Any, cast
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 
@@ -36,14 +36,10 @@ def _is_instructor(roles: list[str]) -> bool:
 
 
 def _extract_org_unit_id(claims: dict[str, Any]) -> str | None:
-    context = cast(
-        dict[str, Any],
-        claims.get("https://purl.imsglobal.org/spec/lti/claim/context", {}),
-    )
-    custom = cast(
-        dict[str, Any],
-        claims.get("https://purl.imsglobal.org/spec/lti/claim/custom", {}),
-    )
+    context_claim = claims.get("https://purl.imsglobal.org/spec/lti/claim/context")
+    custom_claim = claims.get("https://purl.imsglobal.org/spec/lti/claim/custom")
+    context = context_claim if isinstance(context_claim, dict) else {}
+    custom = custom_claim if isinstance(custom_claim, dict) else {}
     org_unit_id = custom.get("org_unit_id") or context.get("id")
     if org_unit_id is None:
         return None
@@ -88,10 +84,26 @@ def jwks(
     tool_conf: ToolConfDict = Depends(get_tool_conf),  # noqa: B008
 ) -> dict[str, list[dict[str, Any]]]:
     settings = get_lti_settings()
-    jwks_payload = tool_conf.get_jwks(settings.issuer, settings.client_id)
-    for key in jwks_payload.get("keys", []):
-        key["kid"] = settings.key_id
-    return cast(dict[str, list[dict[str, Any]]], jwks_payload)
+    raw_jwks_payload = tool_conf.get_jwks(settings.issuer, settings.client_id)
+    if not isinstance(raw_jwks_payload, dict):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+        )
+    keys = raw_jwks_payload.get("keys")
+    if not isinstance(keys, list):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+        )
+    jwks_payload: dict[str, list[dict[str, Any]]] = {"keys": []}
+    for key in keys:
+        if not isinstance(key, dict):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="invalid_jwks"
+            )
+        typed_key = dict(key)
+        typed_key["kid"] = settings.key_id
+        jwks_payload["keys"].append(typed_key)
+    return jwks_payload
 
 
 @router.get("/login")
