@@ -17,7 +17,7 @@ def _build_client(
     tmp_path: Path,
     transport: httpx.MockTransport,
     sleeps: list[float] | None = None,
-):
+) -> tuple[BrightspaceOAuthClient, EncryptedRefreshTokenStore, list[float]]:
     """Build an OAuth client and encrypted store backed by a temporary test database."""
     config = BrightspaceOAuthConfig(
         tenant="sandbox",

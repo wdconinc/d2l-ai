@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from time import sleep as default_sleep
+from typing import cast
 from urllib.parse import urlencode
 
 import httpx
@@ -158,4 +159,7 @@ class BrightspaceOAuthClient:
         )
         assert isinstance(response, httpx.Response)
         response.raise_for_status()
-        return response.json()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Brightspace whoami response must be a JSON object")
+        return cast(dict[str, object], payload)
