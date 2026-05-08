@@ -7,6 +7,7 @@ The integration is built as a standards-based **LTI 1.3 / LTI Advantage tool** p
 ## Documents
 
 - 📄 **[Development plan](docs/brightspace-ai-integration-plan.md)** — full architecture, roadmap, privacy, and tickets.
+- ♿ **[Accessibility guide](docs/accessibility-wcag-2.1-aa.md)** — WCAG 2.1 AA expectations, axe-core CI gate, and manual test checklists.
 - 🤖 **[.github/copilot-instructions.md](.github/copilot-instructions.md)** — repo-wide guidance for the GitHub Coding Agent.
 
 ## Status
@@ -30,18 +31,20 @@ Brightspace ──LTI 1.3──► UM AI Tool (FastAPI + React/Lit)
 
 See [`docs/brightspace-ai-integration-plan.md`](docs/brightspace-ai-integration-plan.md) for details.
 
-## Usage metering (draft implementation)
+## Pre-commit checks
 
-- API app entrypoint: `apps/api/app/main.py`
-- Admin endpoints:
-  - `POST /admin/tenants/{tenant_id}/budget-caps`
-  - `GET /admin/tenants/{tenant_id}/budget-caps`
-  - `GET /admin/tenants/{tenant_id}/usage`
-- Metered LLM-call endpoint: `POST /tenants/{tenant_id}/llm/calls`
-- Auth:
-  - Admin endpoints require `Authorization: Bearer <token>` matching `D2L_AI_ADMIN_API_TOKEN`
-  - LLM-call endpoint requires `Authorization: Bearer <token>` matching `D2L_AI_LLM_CALL_TOKEN`
-- Targeted tests: `PYTHONPATH=apps/api python -m pytest apps/api/tests -q`
+Install and enable pre-commit hooks to run linting and formatting before each commit:
+
+```bash
+python -m pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Configured hooks include:
+- file hygiene checks (merge conflicts, trailing whitespace, EOF newlines)
+- API linting with `ruff` (`apps/api`)
+- API formatting with `black` (`apps/api`)
 
 ## License
 

@@ -126,8 +126,6 @@ class UsageMeter:
                 caps.soft_limit_usd is not None
                 and tenant_usage.estimated_cost_usd >= caps.soft_limit_usd
             ):
-                warning = (
-                    "warnings.budget.soft_cap_reached"
-                )
+                warning = "warnings.budget.soft_cap_reached"
 
             return UsageDecision(warning=warning)
