@@ -59,23 +59,19 @@ class LTIStateNonceStore:
 
     def _initialize(self) -> None:
         with self._conn:
-            self._conn.execute(
-                """
+            self._conn.execute("""
                 CREATE TABLE IF NOT EXISTS lti_states (
                     state TEXT PRIMARY KEY,
                     nonce TEXT NOT NULL,
                     expires_at INTEGER NOT NULL
                 )
-                """
-            )
-            self._conn.execute(
-                """
+                """)
+            self._conn.execute("""
                 CREATE TABLE IF NOT EXISTS lti_used_nonces (
                     nonce TEXT PRIMARY KEY,
                     expires_at INTEGER NOT NULL
                 )
-                """
-            )
+                """)
 
     def _cleanup_expired(self) -> None:
         now = self._now_timestamp()
