@@ -38,8 +38,7 @@ def _build_test_workflow(
 
 
 def test_generate_preview_validates_questions_and_provenance() -> None:
-    workflow = _build_test_workflow(
-        """
+    workflow = _build_test_workflow("""
         {"questions":[
           {"item_id":"q1","question_type":"mcq","question_text":"2+2?","options":[{"text":"3","is_correct":false},{"text":"4","is_correct":true}]},
           {
@@ -49,8 +48,7 @@ def test_generate_preview_validates_questions_and_provenance() -> None:
             "answer_text":"It is attraction between masses."
           }
         ]}
-        """
-    )
+        """)
 
     preview = workflow.generate_preview(
         QuizGenerationRequest(
@@ -71,8 +69,7 @@ def test_generate_preview_validates_questions_and_provenance() -> None:
 
 
 def test_generate_preview_repairs_fenced_json_and_alias_type() -> None:
-    workflow = _build_test_workflow(
-        """```json
+    workflow = _build_test_workflow("""```json
         {
           "questions":[
             {
@@ -85,8 +82,7 @@ def test_generate_preview_repairs_fenced_json_and_alias_type() -> None:
             }
           ]
         }
-        ```"""
-    )
+        ```""")
 
     preview = workflow.generate_preview(
         QuizGenerationRequest(org_unit_id=10, module_id=2, topic_ids=[1], readings=["Topic"])
@@ -106,13 +102,11 @@ def test_generate_preview_rejects_malformed_json() -> None:
 
 
 def test_generate_preview_rejects_unexpected_fields() -> None:
-    workflow = _build_test_workflow(
-        """
+    workflow = _build_test_workflow("""
         {"questions":[
           {"question_type":"short_answer","question_text":"Q","answer_text":"A","difficulty":"hard"}
         ]}
-        """
-    )
+        """)
 
     with pytest.raises(QuizSchemaError):
         workflow.generate_preview(
