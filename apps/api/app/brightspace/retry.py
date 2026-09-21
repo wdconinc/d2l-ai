@@ -6,9 +6,7 @@ from collections.abc import Callable
 from time import sleep as default_sleep
 
 
-def retry_with_exponential_backoff[
-    T
-](
+def retry_with_exponential_backoff[T](
     operation: Callable[[], T],
     should_retry: Callable[[T], bool],
     *,

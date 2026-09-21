@@ -23,8 +23,7 @@ class EncryptedRefreshTokenStore:
 
     def _init_db(self) -> None:
         with self._connection() as conn:
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS app_brightspace_tokens (
                     tenant TEXT NOT NULL,
                     token_owner TEXT NOT NULL,
@@ -32,8 +31,7 @@ class EncryptedRefreshTokenStore:
                     updated_at TEXT NOT NULL,
                     PRIMARY KEY (tenant, token_owner)
                 )
-                """
-            )
+                """)
             conn.commit()
 
     def save_refresh_token(self, tenant: str, token_owner: str, refresh_token: str) -> None:
